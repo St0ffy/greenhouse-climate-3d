@@ -82,4 +82,11 @@ struct HumidifierSpec {
     double influenceRadiusM = 1.0;
 };
 
+struct OutputSpec {
+    std::string directory = "outputs";
+    bool writeCsv = true;
+    bool writeJson = true;
+    bool writeReport = true;
+};
+
 } // namespace greenhouse

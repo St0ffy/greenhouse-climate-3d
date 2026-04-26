@@ -38,6 +38,10 @@ int main() {
     assert(config.heaters.size() == 2);
     assert(config.humidifiers.size() == 1);
     assert(config.plants.size() == 3);
+    assert(config.output.directory == "outputs");
+    assert(config.output.writeCsv);
+    assert(config.output.writeJson);
+    assert(config.output.writeReport);
 
     return 0;
 }

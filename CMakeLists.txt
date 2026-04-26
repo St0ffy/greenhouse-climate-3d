@@ -81,3 +81,19 @@ add_executable(test_physics
 target_link_libraries(test_physics PRIVATE greenhouse_core)
 
 add_test(NAME physics COMMAND test_physics)
+
+add_executable(test_simulator
+    tests/test_simulator.cpp
+)
+
+target_link_libraries(test_simulator PRIVATE greenhouse_core)
+
+add_test(NAME simulator COMMAND test_simulator)
+
+add_executable(test_export_report
+    tests/test_export_report.cpp
+)
+
+target_link_libraries(test_export_report PRIVATE greenhouse_core)
+
+add_test(NAME export_report COMMAND test_export_report)

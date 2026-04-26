@@ -213,6 +213,7 @@ SimulationConfig loadConfig(const std::string& path) {
     const std::string weatherSection = readObject(text, "weather");
     const std::string materialSection = readObject(text, "material");
     const std::string humiditySection = readObject(text, "humidity");
+    const std::string outputSection = readObject(text, "output");
     SimulationConfig config;
 
     config.mode = readString(runSection, "mode", "simulate");
@@ -243,6 +244,12 @@ SimulationConfig loadConfig(const std::string& path) {
     };
     config.humidityEnabled = readBool(humiditySection, "enabled", true);
     config.humidifierMode = readString(humiditySection, "humidifier_mode", "medium");
+    config.output = {
+        readString(outputSection, "directory", "outputs"),
+        readBool(outputSection, "write_csv", true),
+        readBool(outputSection, "write_json", true),
+        readBool(outputSection, "write_report", true)
+    };
     config.heaterPowerW = readNumber(text, "power_w", 1200.0);
     config.plants = {
         {"plant_1", {3.0, 2.0, 0.5}, 22.0},

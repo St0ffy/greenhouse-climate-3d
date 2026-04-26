@@ -86,6 +86,8 @@ Day 5 adds `advanceClimate`, which wraps the temperature step and then applies h
 
 Owns the time loop. It calls Physics repeatedly, collects history and metrics, and returns a simulation result.
 
+Day 6 adds `runSimulation`. It creates the initial cell vector, calls `advanceClimate` until the configured duration is reached, stores every frame, tracks plant metrics, and accumulates heater energy.
+
 ### Optimizer
 
 Runs several simulations with different heater positions and chooses the best option using a simple quality function.
@@ -94,12 +96,20 @@ Runs several simulations with different heater positions and chooses the best op
 
 Writes result files to `outputs/`. It should not change simulation data.
 
+Day 6 adds CSV and JSON export:
+
+- `cell_history.csv` contains every grid cell for every stored frame;
+- `metrics.csv` contains one row per frame for plotting averages and plant metrics;
+- `summary.json` contains the final compact summary.
+
 ### Report
 
 Creates a human-readable terminal and text report.
 
-## Day 5 Status
+Day 6 adds a report builder and `outputs/report.txt`. The report is designed for PuTTY usage, where the user may want the result immediately in terminal text.
 
-The repository scaffold, geometry layer, weather timeline, material model, prepared device set, temperature physics, humidity diffusion, humidifier effects, and vent exchange are ready. The program can now build a 3D grid, map plants and devices to cells, read CSV weather, prepare material properties, run one full climate step, show a terminal preview, and run small module tests.
+## Day 6 Status
 
-Full simulation history, result export, reports, and optimization are intentionally still incomplete and will be implemented step by step.
+The repository scaffold, geometry layer, weather timeline, material model, prepared device set, temperature physics, humidity diffusion, humidifier effects, vent exchange, full simulation loop, export, and text report are ready. The program can now run a complete baseline simulation from config and save usable output files.
+
+Optimization is intentionally still incomplete and will be implemented next.

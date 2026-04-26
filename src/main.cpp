@@ -1,8 +1,11 @@
 #include "Config.h"
 #include "Devices.h"
+#include "Exporter.h"
 #include "Geometry.h"
 #include "Material.h"
 #include "Physics.h"
+#include "Report.h"
+#include "Simulator.h"
 #include "Weather.h"
 
 #include <exception>
@@ -104,59 +107,6 @@ void printMaterialSummary(const greenhouse::MaterialProperties& material) {
               << ", solar transmission " << material.solarTransmission << "\n";
 }
 
-void printClimatePreview(
-    const greenhouse::Grid3D& grid,
-    const greenhouse::SimulationConfig& config,
-    const greenhouse::WeatherTimeline& weather,
-    const greenhouse::MaterialProperties& material,
-    const greenhouse::MappedDeviceSet& devices
-) {
-    const std::vector<greenhouse::CellState> initialCells =
-        greenhouse::makeInitialCells(
-            grid,
-            config.initialTemperatureC,
-            config.initialHumidityPercent
-        );
-    greenhouse::ClimatePhysicsSettings settings;
-    settings.humidity.humidityEnabled = config.humidityEnabled;
-
-    const greenhouse::ClimateStepResult preview =
-        greenhouse::advanceClimate(
-            initialCells,
-            grid,
-            weather.at(0.0),
-            material,
-            devices,
-            config.timeStepSeconds,
-            settings
-        );
-    const greenhouse::PlantTemperatureStats plantStats =
-        greenhouse::summarizePlantTemperatures(preview.cells, devices.plants);
-    const greenhouse::PlantHumidityStats plantHumidity =
-        greenhouse::summarizePlantHumidity(preview.cells, devices.plants);
-
-    std::cout << "One-step climate preview:\n";
-    std::cout << "  average " << preview.summary.temperatureStep.temperature.averageTemperatureC
-              << " C, min " << preview.summary.temperatureStep.temperature.minTemperatureC
-              << " C, max " << preview.summary.temperatureStep.temperature.maxTemperatureC << " C\n";
-    std::cout << "  avg solar gain " << preview.summary.temperatureStep.averageSolarGainC
-              << " C, avg heater gain " << preview.summary.temperatureStep.averageHeaterGainC
-              << " C, avg boundary delta " << preview.summary.temperatureStep.averageBoundaryLossC
-              << " C, avg vent delta " << preview.summary.averageVentTemperatureDeltaC << " C\n";
-    std::cout << "  humidity average " << preview.summary.humidity.averageHumidityPercent
-              << " %, min " << preview.summary.humidity.minHumidityPercent
-              << " %, max " << preview.summary.humidity.maxHumidityPercent << " %\n";
-    std::cout << "  avg humidifier gain " << preview.summary.averageHumidifierGainPercent
-              << " %, avg humidity diffusion " << preview.summary.averageHumidityExchangeAbsPercent
-              << " %, avg vent humidity delta " << preview.summary.averageVentHumidityDeltaPercent << " %\n";
-    std::cout << "  plant average " << plantStats.averageTemperatureC
-              << " C, target " << plantStats.averageTargetTemperatureC
-              << " C, average error " << plantStats.averageAbsoluteErrorC
-              << " C, plant humidity " << plantHumidity.averageHumidityPercent << " %\n";
-    std::cout << "  heater energy for one step "
-              << preview.summary.temperatureStep.heaterEnergyKWh << " kWh\n";
-}
-
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -209,8 +159,32 @@ int main(int argc, char* argv[]) {
         printWeatherSummary(weather, config.durationSeconds);
         printPlantMapping(devices.plants, grid);
         printDeviceMapping(devices, grid);
-        printClimatePreview(grid, config, weather, material, devices);
-        std::cout << "\nDay 5 humidity and ventilation physics is ready. Full simulation loop will be added next.\n";
+
+        if (config.mode == "optimize") {
+            std::cout << "\nOptimizer will be implemented in the next step. Running baseline simulation for now.\n";
+        }
+
+        const greenhouse::SimulationResult result =
+            greenhouse::runSimulation(config, grid, weather, material, devices);
+        const greenhouse::ExportedFiles exported =
+            greenhouse::exportSimulationResult(result, grid, config.output);
+        const std::string reportText =
+            greenhouse::buildSimulationReport(result, grid, devices);
+        const std::string reportPath =
+            greenhouse::writeReportFile(reportText, config.output);
+
+        std::cout << "\n" << reportText;
+
+        if (!exported.paths.empty() || !reportPath.empty()) {
+            std::cout << "\nOutput files\n";
+            std::cout << "------------\n";
+            for (const std::string& path : exported.paths) {
+                std::cout << path << "\n";
+            }
+            if (!reportPath.empty()) {
+                std::cout << reportPath << "\n";
+            }
+        }
     } catch (const std::exception& ex) {
         std::cerr << "Startup error: " << ex.what() << "\n";
         return 1;

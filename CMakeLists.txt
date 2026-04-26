@@ -73,3 +73,11 @@ add_executable(test_devices
 target_link_libraries(test_devices PRIVATE greenhouse_core)
 
 add_test(NAME devices COMMAND test_devices)
+
+add_executable(test_physics
+    tests/test_physics.cpp
+)
+
+target_link_libraries(test_physics PRIVATE greenhouse_core)
+
+add_test(NAME physics COMMAND test_physics)

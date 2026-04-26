@@ -2,6 +2,7 @@
 #include "Devices.h"
 #include "Geometry.h"
 #include "Material.h"
+#include "Physics.h"
 #include "Weather.h"
 
 #include <exception>
@@ -103,6 +104,45 @@ void printMaterialSummary(const greenhouse::MaterialProperties& material) {
               << ", solar transmission " << material.solarTransmission << "\n";
 }
 
+void printTemperaturePreview(
+    const greenhouse::Grid3D& grid,
+    const greenhouse::SimulationConfig& config,
+    const greenhouse::WeatherTimeline& weather,
+    const greenhouse::MaterialProperties& material,
+    const greenhouse::MappedDeviceSet& devices
+) {
+    const std::vector<greenhouse::CellState> initialCells =
+        greenhouse::makeInitialCells(
+            grid,
+            config.initialTemperatureC,
+            config.initialHumidityPercent
+        );
+    const greenhouse::TemperatureStepResult preview =
+        greenhouse::advanceTemperature(
+            initialCells,
+            grid,
+            weather.at(0.0),
+            material,
+            devices,
+            config.timeStepSeconds
+        );
+    const greenhouse::PlantTemperatureStats plantStats =
+        greenhouse::summarizePlantTemperatures(preview.cells, devices.plants);
+
+    std::cout << "One-step temperature preview:\n";
+    std::cout << "  average " << preview.summary.temperature.averageTemperatureC
+              << " C, min " << preview.summary.temperature.minTemperatureC
+              << " C, max " << preview.summary.temperature.maxTemperatureC << " C\n";
+    std::cout << "  avg solar gain " << preview.summary.averageSolarGainC
+              << " C, avg heater gain " << preview.summary.averageHeaterGainC
+              << " C, avg boundary delta " << preview.summary.averageBoundaryLossC << " C\n";
+    std::cout << "  plant average " << plantStats.averageTemperatureC
+              << " C, target " << plantStats.averageTargetTemperatureC
+              << " C, average error " << plantStats.averageAbsoluteErrorC << " C\n";
+    std::cout << "  heater energy for one step "
+              << preview.summary.heaterEnergyKWh << " kWh\n";
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -155,7 +195,8 @@ int main(int argc, char* argv[]) {
         printWeatherSummary(weather, config.durationSeconds);
         printPlantMapping(devices.plants, grid);
         printDeviceMapping(devices, grid);
-        std::cout << "\nDay 3 input models are ready. Temperature physics will be added next.\n";
+        printTemperaturePreview(grid, config, weather, material, devices);
+        std::cout << "\nDay 4 temperature physics is ready. Humidity and ventilation will be added next.\n";
     } catch (const std::exception& ex) {
         std::cerr << "Startup error: " << ex.what() << "\n";
         return 1;

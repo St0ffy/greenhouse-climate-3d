@@ -78,6 +78,8 @@ Day 3 adds validation and `MappedDeviceSet`, so later modules can use one prepar
 
 Calculates one time step. It applies heat transfer, heat loss, solar heating, ventilation, heaters, and humidifiers.
 
+Day 4 adds the first real physics implementation for temperature. `advanceTemperature` receives prepared cell states, `Grid3D`, `WeatherCondition`, `MaterialProperties`, `MappedDeviceSet`, and `dt`, then returns a new cell vector plus a small step summary. Humidity is preserved unchanged for now; ventilation and humidity physics are the next layer.
+
 ### Simulator
 
 Owns the time loop. It calls Physics repeatedly, collects history and metrics, and returns a simulation result.
@@ -94,8 +96,8 @@ Writes result files to `outputs/`. It should not change simulation data.
 
 Creates a human-readable terminal and text report.
 
-## Day 3 Status
+## Day 4 Status
 
-The repository scaffold, geometry layer, weather timeline, material model, and prepared device set are ready. The program can now build a 3D grid, map plants and devices to cells, read CSV weather, prepare material properties, show the mapping in the terminal, and run small module tests.
+The repository scaffold, geometry layer, weather timeline, material model, prepared device set, and temperature physics are ready. The program can now build a 3D grid, map plants and devices to cells, read CSV weather, prepare material properties, run one temperature step, show a terminal preview, and run small module tests.
 
-The physics and result-export modules are intentionally still placeholders and will be implemented step by step.
+Humidity, ventilation coupling, full simulation history, and result export are intentionally still incomplete and will be implemented step by step.

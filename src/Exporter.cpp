@@ -13,7 +13,9 @@ namespace {
 
 std::filesystem::path ensureOutputDirectory(const OutputSpec& output) {
     const std::filesystem::path directory =
-        output.directory.empty() ? std::filesystem::path("outputs") : output.directory;
+        output.directory.empty()
+            ? std::filesystem::path("outputs")
+            : std::filesystem::path(output.directory);
 
     std::filesystem::create_directories(directory);
     return directory;

@@ -54,6 +54,33 @@ std::string readString(const std::string& text, const std::string& key, const st
     return fallback;
 }
 
+std::string readObject(const std::string& text, const std::string& key) {
+    const std::string quotedKey = "\"" + key + "\"";
+    const std::size_t keyPosition = text.find(quotedKey);
+    if (keyPosition == std::string::npos) {
+        return {};
+    }
+
+    const std::size_t objectStart = text.find('{', keyPosition + quotedKey.size());
+    if (objectStart == std::string::npos) {
+        return {};
+    }
+
+    int braceDepth = 0;
+    for (std::size_t i = objectStart; i < text.size(); ++i) {
+        if (text[i] == '{') {
+            ++braceDepth;
+        } else if (text[i] == '}') {
+            --braceDepth;
+            if (braceDepth == 0) {
+                return text.substr(objectStart, i - objectStart + 1);
+            }
+        }
+    }
+
+    return {};
+}
+
 Vec3 readVec3(const std::string& text, const std::string& key, const Vec3& fallback) {
     const std::regex pattern(
         "\"" + key + "\"\\s*:\\s*\\[\\s*"
@@ -179,28 +206,43 @@ std::vector<PlantPoint> readPlants(const std::string& text) {
 
 SimulationConfig loadConfig(const std::string& path) {
     const std::string text = readFile(path);
+    const std::string runSection = readObject(text, "run");
+    const std::string greenhouseSection = readObject(text, "greenhouse");
+    const std::string gridSection = readObject(text, "grid");
+    const std::string initialStateSection = readObject(text, "initial_state");
+    const std::string weatherSection = readObject(text, "weather");
+    const std::string materialSection = readObject(text, "material");
+    const std::string humiditySection = readObject(text, "humidity");
     SimulationConfig config;
 
-    config.mode = readString(text, "mode", "simulate");
+    config.mode = readString(runSection, "mode", "simulate");
     config.greenhouseSize = {
-        readNumber(text, "length_m", 12.0),
-        readNumber(text, "width_m", 6.0),
-        readNumber(text, "height_m", 3.0)
+        readNumber(greenhouseSection, "length_m", 12.0),
+        readNumber(greenhouseSection, "width_m", 6.0),
+        readNumber(greenhouseSection, "height_m", 3.0)
     };
     config.gridSize = {
-        readInt(text, "nx", 12),
-        readInt(text, "ny", 6),
-        readInt(text, "nz", 4)
+        readInt(gridSection, "nx", 12),
+        readInt(gridSection, "ny", 6),
+        readInt(gridSection, "nz", 4)
     };
-    config.durationSeconds = readNumber(text, "duration_seconds", 6.0 * 3600.0);
-    config.timeStepSeconds = readNumber(text, "time_step_seconds", 60.0);
-    config.initialTemperatureC = readNumber(text, "temperature_c", 18.0);
-    config.initialHumidityPercent = readNumber(text, "humidity_percent", 60.0);
-    config.outsideTemperatureC = readNumber(text, "outside_temperature_c", 5.0);
-    config.outsideHumidityPercent = readNumber(text, "outside_humidity_percent", 75.0);
-    config.solarRadiationWm2 = readNumber(text, "solar_radiation_w_m2", 350.0);
-    config.humidityEnabled = readBool(text, "enabled", true);
-    config.humidifierMode = readString(text, "humidifier_mode", "medium");
+    config.durationSeconds = readNumber(runSection, "duration_seconds", 6.0 * 3600.0);
+    config.timeStepSeconds = readNumber(runSection, "time_step_seconds", 60.0);
+    config.initialTemperatureC = readNumber(initialStateSection, "temperature_c", 18.0);
+    config.initialHumidityPercent = readNumber(initialStateSection, "humidity_percent", 60.0);
+    config.weather = {
+        readNumber(weatherSection, "outside_temperature_c", 5.0),
+        readNumber(weatherSection, "outside_humidity_percent", 75.0),
+        readNumber(weatherSection, "solar_radiation_w_m2", 350.0),
+        readString(weatherSection, "weather_file", "")
+    };
+    config.material = {
+        readString(materialSection, "name", "polycarbonate"),
+        readNumber(materialSection, "heat_loss_coefficient", -1.0),
+        readNumber(materialSection, "solar_transmission", -1.0)
+    };
+    config.humidityEnabled = readBool(humiditySection, "enabled", true);
+    config.humidifierMode = readString(humiditySection, "humidifier_mode", "medium");
     config.heaterPowerW = readNumber(text, "power_w", 1200.0);
     config.plants = {
         {"plant_1", {3.0, 2.0, 0.5}, 22.0},

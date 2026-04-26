@@ -1,6 +1,10 @@
 #include "Devices.h"
 
 #include <algorithm>
+#include <cctype>
+#include <numeric>
+#include <stdexcept>
+#include <string>
 
 namespace greenhouse {
 
@@ -38,7 +42,110 @@ std::vector<DeviceInfluenceCell> buildInfluenceCells(
     return result;
 }
 
+std::string normalizedMode(const std::string& mode) {
+    std::string result = mode;
+    std::transform(
+        result.begin(),
+        result.end(),
+        result.begin(),
+        [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        }
+    );
+    return result;
+}
+
+double totalPower(const std::vector<MappedHeater>& heaters) {
+    double total = 0.0;
+    for (const MappedHeater& heater : heaters) {
+        total += heater.spec.powerW;
+    }
+    return total;
+}
+
+double averageOpening(const std::vector<MappedVent>& vents) {
+    if (vents.empty()) {
+        return 0.0;
+    }
+
+    double total = 0.0;
+    for (const MappedVent& vent : vents) {
+        total += vent.spec.opening;
+    }
+    return total / static_cast<double>(vents.size());
+}
+
 } // namespace
+
+bool isValidHumidifierMode(const std::string& mode) {
+    const std::string normalized = normalizedMode(mode);
+    return normalized == "off"
+        || normalized == "low"
+        || normalized == "medium"
+        || normalized == "high";
+}
+
+double humidifierModeMultiplier(const std::string& mode) {
+    const std::string normalized = normalizedMode(mode);
+    if (normalized == "off") {
+        return 0.0;
+    }
+    if (normalized == "low") {
+        return 0.5;
+    }
+    if (normalized == "medium") {
+        return 1.0;
+    }
+    if (normalized == "high") {
+        return 1.5;
+    }
+
+    throw std::invalid_argument("unknown humidifier mode: " + mode);
+}
+
+void validateDeviceSpecs(
+    const std::vector<PlantPoint>& plants,
+    const std::vector<VentSpec>& vents,
+    const std::vector<HeaterSpec>& heaters,
+    const std::vector<HumidifierSpec>& humidifiers
+) {
+    if (plants.empty()) {
+        throw std::invalid_argument("at least one plant control point is required");
+    }
+
+    for (const PlantPoint& plant : plants) {
+        if (plant.targetTemperatureC < -50.0 || plant.targetTemperatureC > 80.0) {
+            throw std::invalid_argument("plant target temperature is outside a reasonable range");
+        }
+    }
+
+    for (const VentSpec& vent : vents) {
+        if (vent.opening < 0.0 || vent.opening > 1.0) {
+            throw std::invalid_argument("vent opening must be in range 0..1: " + vent.name);
+        }
+        if (vent.influenceRadiusM < 0.0) {
+            throw std::invalid_argument("vent influence radius cannot be negative: " + vent.name);
+        }
+    }
+
+    for (const HeaterSpec& heater : heaters) {
+        if (heater.powerW < 0.0) {
+            throw std::invalid_argument("heater power cannot be negative: " + heater.name);
+        }
+        if (heater.influenceRadiusM < 0.0) {
+            throw std::invalid_argument("heater influence radius cannot be negative: " + heater.name);
+        }
+    }
+
+    for (const HumidifierSpec& humidifier : humidifiers) {
+        if (!isValidHumidifierMode(humidifier.mode)) {
+            throw std::invalid_argument("humidifier mode must be off, low, medium, or high: " + humidifier.name);
+        }
+        if (humidifier.influenceRadiusM < 0.0) {
+            throw std::invalid_argument("humidifier influence radius cannot be negative: " + humidifier.name);
+        }
+    }
+}
 
 std::vector<MappedPlantPoint> mapPlantsToGrid(
     const std::vector<PlantPoint>& plants,
@@ -119,6 +226,25 @@ std::vector<MappedHumidifier> mapHumidifiersToGrid(
         });
     }
 
+    return result;
+}
+
+MappedDeviceSet mapDeviceSetToGrid(
+    const std::vector<PlantPoint>& plants,
+    const std::vector<VentSpec>& vents,
+    const std::vector<HeaterSpec>& heaters,
+    const std::vector<HumidifierSpec>& humidifiers,
+    const Grid3D& grid
+) {
+    validateDeviceSpecs(plants, vents, heaters, humidifiers);
+
+    MappedDeviceSet result;
+    result.plants = mapPlantsToGrid(plants, grid);
+    result.vents = mapVentsToGrid(vents, grid);
+    result.heaters = mapHeatersToGrid(heaters, grid);
+    result.humidifiers = mapHumidifiersToGrid(humidifiers, grid);
+    result.totalHeaterPowerW = totalPower(result.heaters);
+    result.averageVentOpening = averageOpening(result.vents);
     return result;
 }
 

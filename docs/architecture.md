@@ -39,6 +39,8 @@ main.cpp
 
 Reads user settings and validates required values. It should not run the simulation and should not contain physical formulas.
 
+The current parser is intentionally lightweight and supports the JSON structure used by this project. If the project grows, the best future rewrite is replacing this file with a real JSON library such as `nlohmann/json`, while keeping the same `SimulationConfig` output structure.
+
 ### Geometry
 
 Stores greenhouse size, grid dimensions, cell size, coordinate conversion, and neighbor lookup. It should not know about weather, heaters, or humidity formulas.
@@ -56,15 +58,21 @@ Current grid conventions:
 
 Provides outside temperature, outside humidity, and solar radiation for a requested time. It may use constant config values or a CSV weather file.
 
+Day 3 adds `WeatherTimeline`. It loads `data/weather_sample.csv`, sorts samples by time, clamps humidity and solar radiation to valid ranges, and returns weather for any simulation time using linear interpolation.
+
 ### Material
 
 Stores greenhouse cover parameters such as heat loss coefficient and solar transmission.
+
+Day 3 adds material presets for `polycarbonate`, `glass`, and `film`, plus custom values from config. Physics should use `MaterialProperties`, not raw config strings.
 
 ### Devices
 
 Stores vents, heaters, humidifiers, and plant control points. It maps their real coordinates to grid cells with help from Geometry.
 
 Day 2 adds device-to-grid mapping. Each plant has one control cell. Each vent, heater, and humidifier has an anchor cell plus a list of influenced cells found by radius around the device position. Influence cells also store distance and a simple distance-based weight for later physics formulas.
+
+Day 3 adds validation and `MappedDeviceSet`, so later modules can use one prepared object with plants, vents, heaters, humidifiers, total heater power, and average vent opening.
 
 ### Physics
 
@@ -86,8 +94,8 @@ Writes result files to `outputs/`. It should not change simulation data.
 
 Creates a human-readable terminal and text report.
 
-## Day 2 Status
+## Day 3 Status
 
-The repository scaffold and geometry layer are prepared. The program can now build a 3D grid, map plants and devices to cells, show the mapping in the terminal, and run a small geometry test.
+The repository scaffold, geometry layer, weather timeline, material model, and prepared device set are ready. The program can now build a 3D grid, map plants and devices to cells, read CSV weather, prepare material properties, show the mapping in the terminal, and run small module tests.
 
 The physics and result-export modules are intentionally still placeholders and will be implemented step by step.

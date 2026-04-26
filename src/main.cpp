@@ -1,6 +1,8 @@
 #include "Config.h"
 #include "Devices.h"
 #include "Geometry.h"
+#include "Material.h"
+#include "Weather.h"
 
 #include <exception>
 #include <iomanip>
@@ -43,34 +45,62 @@ void printPlantMapping(
 }
 
 void printDeviceMapping(
-    const std::vector<greenhouse::MappedVent>& vents,
-    const std::vector<greenhouse::MappedHeater>& heaters,
-    const std::vector<greenhouse::MappedHumidifier>& humidifiers,
+    const greenhouse::MappedDeviceSet& devices,
     const greenhouse::Grid3D& grid
 ) {
-    std::cout << "Vents: " << vents.size() << "\n";
-    for (const greenhouse::MappedVent& vent : vents) {
+    std::cout << "Vents: " << devices.vents.size()
+              << ", average opening " << devices.averageVentOpening << "\n";
+    for (const greenhouse::MappedVent& vent : devices.vents) {
         std::cout << "  " << vent.spec.name
                   << " -> cell " << grid.formatIndex(vent.anchorCell)
                   << ", opening " << vent.spec.opening
                   << ", affected cells " << vent.influenceCells.size() << "\n";
     }
 
-    std::cout << "Heaters: " << heaters.size() << "\n";
-    for (const greenhouse::MappedHeater& heater : heaters) {
+    std::cout << "Heaters: " << devices.heaters.size()
+              << ", total power " << devices.totalHeaterPowerW << " W\n";
+    for (const greenhouse::MappedHeater& heater : devices.heaters) {
         std::cout << "  " << heater.spec.name
                   << " -> cell " << grid.formatIndex(heater.anchorCell)
                   << ", power " << heater.spec.powerW
                   << " W, affected cells " << heater.influenceCells.size() << "\n";
     }
 
-    std::cout << "Humidifiers: " << humidifiers.size() << "\n";
-    for (const greenhouse::MappedHumidifier& humidifier : humidifiers) {
+    std::cout << "Humidifiers: " << devices.humidifiers.size() << "\n";
+    for (const greenhouse::MappedHumidifier& humidifier : devices.humidifiers) {
         std::cout << "  " << humidifier.spec.name
                   << " -> cell " << grid.formatIndex(humidifier.anchorCell)
                   << ", mode " << humidifier.spec.mode
+                  << ", multiplier " << greenhouse::humidifierModeMultiplier(humidifier.spec.mode)
                   << ", affected cells " << humidifier.influenceCells.size() << "\n";
     }
+}
+
+void printWeatherSummary(
+    const greenhouse::WeatherTimeline& weather,
+    double durationSeconds
+) {
+    const greenhouse::WeatherCondition start = weather.at(0.0);
+    const greenhouse::WeatherCondition middle = weather.at(durationSeconds / 2.0);
+    const greenhouse::WeatherCondition end = weather.at(durationSeconds);
+
+    std::cout << "Weather source: " << weather.source()
+              << ", samples " << weather.sampleCount() << "\n";
+    std::cout << "  t=0s: temp " << start.outsideTemperatureC
+              << " C, humidity " << start.outsideHumidityPercent
+              << " %, solar " << start.solarRadiationWm2 << " W/m2\n";
+    std::cout << "  t=mid: temp " << middle.outsideTemperatureC
+              << " C, humidity " << middle.outsideHumidityPercent
+              << " %, solar " << middle.solarRadiationWm2 << " W/m2\n";
+    std::cout << "  t=end: temp " << end.outsideTemperatureC
+              << " C, humidity " << end.outsideHumidityPercent
+              << " %, solar " << end.solarRadiationWm2 << " W/m2\n";
+}
+
+void printMaterialSummary(const greenhouse::MaterialProperties& material) {
+    std::cout << "Material: " << material.name
+              << ", heat loss coefficient " << material.heatLossCoefficient
+              << ", solar transmission " << material.solarTransmission << "\n";
 }
 
 } // namespace
@@ -94,14 +124,21 @@ int main(int argc, char* argv[]) {
         greenhouse::SimulationConfig config = greenhouse::loadConfig(configPath);
         config.mode = mode;
         greenhouse::Grid3D grid(config.greenhouseSize, config.gridSize);
-        const std::vector<greenhouse::MappedPlantPoint> plants =
-            greenhouse::mapPlantsToGrid(config.plants, grid);
-        const std::vector<greenhouse::MappedVent> vents =
-            greenhouse::mapVentsToGrid(config.vents, grid);
-        const std::vector<greenhouse::MappedHeater> heaters =
-            greenhouse::mapHeatersToGrid(config.heaters, grid);
-        const std::vector<greenhouse::MappedHumidifier> humidifiers =
-            greenhouse::mapHumidifiersToGrid(config.humidifiers, grid);
+        const greenhouse::MappedDeviceSet devices =
+            greenhouse::mapDeviceSetToGrid(
+                config.plants,
+                config.vents,
+                config.heaters,
+                config.humidifiers,
+                grid
+            );
+        const greenhouse::MaterialProperties material =
+            greenhouse::makeMaterial(config.material);
+        const greenhouse::WeatherTimeline weather =
+            greenhouse::WeatherTimeline::fromCsv(
+                config.weather.weatherFile,
+                config.weather
+            );
 
         std::cout << std::fixed << std::setprecision(2);
         std::cout << "Greenhouse Climate 3D\n";
@@ -114,9 +151,11 @@ int main(int argc, char* argv[]) {
         std::cout << "Duration, seconds: " << config.durationSeconds << "\n";
         std::cout << "Time step, seconds: " << config.timeStepSeconds << "\n";
         printGridSummary(grid);
-        printPlantMapping(plants, grid);
-        printDeviceMapping(vents, heaters, humidifiers, grid);
-        std::cout << "\nDay 2 geometry layer is ready. Physics modules will be added next.\n";
+        printMaterialSummary(material);
+        printWeatherSummary(weather, config.durationSeconds);
+        printPlantMapping(devices.plants, grid);
+        printDeviceMapping(devices, grid);
+        std::cout << "\nDay 3 input models are ready. Temperature physics will be added next.\n";
     } catch (const std::exception& ex) {
         std::cerr << "Startup error: " << ex.what() << "\n";
         return 1;

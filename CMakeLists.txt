@@ -41,3 +41,35 @@ add_executable(test_geometry
 target_link_libraries(test_geometry PRIVATE greenhouse_core)
 
 add_test(NAME geometry COMMAND test_geometry)
+
+add_executable(test_config
+    tests/test_config.cpp
+)
+
+target_link_libraries(test_config PRIVATE greenhouse_core)
+
+add_test(NAME config COMMAND test_config)
+
+add_executable(test_weather
+    tests/test_weather.cpp
+)
+
+target_link_libraries(test_weather PRIVATE greenhouse_core)
+
+add_test(NAME weather COMMAND test_weather)
+
+add_executable(test_material
+    tests/test_material.cpp
+)
+
+target_link_libraries(test_material PRIVATE greenhouse_core)
+
+add_test(NAME material COMMAND test_material)
+
+add_executable(test_devices
+    tests/test_devices.cpp
+)
+
+target_link_libraries(test_devices PRIVATE greenhouse_core)
+
+add_test(NAME devices COMMAND test_devices)

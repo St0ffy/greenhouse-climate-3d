@@ -37,6 +37,19 @@ struct GreenhouseSize {
     double height = 1.0;
 };
 
+struct WeatherSpec {
+    double outsideTemperatureC = 5.0;
+    double outsideHumidityPercent = 80.0;
+    double solarRadiationWm2 = 300.0;
+    std::string weatherFile;
+};
+
+struct MaterialSpec {
+    std::string name = "polycarbonate";
+    double heatLossCoefficient = -1.0;
+    double solarTransmission = -1.0;
+};
+
 struct CellState {
     double temperatureC = 20.0;
     double humidityPercent = 60.0;

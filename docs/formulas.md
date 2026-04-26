@@ -54,6 +54,8 @@ Open vents move nearby cells toward outside temperature and humidity.
 new_value = old_value + opening * ventilation_rate * (outside_value - old_value) * dt
 ```
 
+The current implementation applies this formula to both temperature and humidity for cells inside each vent influence radius. The mixing factor is clamped, so a large time step cannot instantly replace the entire cell state.
+
 ## Heaters
 
 Heaters add heat to cells near their position. The influence should become weaker with distance.
@@ -78,6 +80,18 @@ Each temperature step returns:
 ## Humidifiers
 
 Humidifiers increase humidity near their position. The amount depends on mode: `off`, `low`, `medium`, or `high`.
+
+The current implementation distributes each humidifier's total moisture gain between influenced cells by distance-based weights. Humidity is clamped to `0..100%`.
+
+## Humidity Transfer
+
+Humidity also spreads between neighboring cells:
+
+```text
+new_humidity = old_humidity + humidity_k * (neighbor_average_humidity - old_humidity) * dt
+```
+
+This mirrors the simplified heat-transfer idea, but uses separate coefficients.
 
 ## Optimization Quality
 

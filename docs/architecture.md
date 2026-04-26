@@ -78,7 +78,9 @@ Day 3 adds validation and `MappedDeviceSet`, so later modules can use one prepar
 
 Calculates one time step. It applies heat transfer, heat loss, solar heating, ventilation, heaters, and humidifiers.
 
-Day 4 adds the first real physics implementation for temperature. `advanceTemperature` receives prepared cell states, `Grid3D`, `WeatherCondition`, `MaterialProperties`, `MappedDeviceSet`, and `dt`, then returns a new cell vector plus a small step summary. Humidity is preserved unchanged for now; ventilation and humidity physics are the next layer.
+Day 4 adds the first real physics implementation for temperature. `advanceTemperature` receives prepared cell states, `Grid3D`, `WeatherCondition`, `MaterialProperties`, `MappedDeviceSet`, and `dt`, then returns a new cell vector plus a small step summary.
+
+Day 5 adds `advanceClimate`, which wraps the temperature step and then applies humidity diffusion, humidifier gain, and vent exchange. This is the function the future `Simulator` should call in its time loop.
 
 ### Simulator
 
@@ -96,8 +98,8 @@ Writes result files to `outputs/`. It should not change simulation data.
 
 Creates a human-readable terminal and text report.
 
-## Day 4 Status
+## Day 5 Status
 
-The repository scaffold, geometry layer, weather timeline, material model, prepared device set, and temperature physics are ready. The program can now build a 3D grid, map plants and devices to cells, read CSV weather, prepare material properties, run one temperature step, show a terminal preview, and run small module tests.
+The repository scaffold, geometry layer, weather timeline, material model, prepared device set, temperature physics, humidity diffusion, humidifier effects, and vent exchange are ready. The program can now build a 3D grid, map plants and devices to cells, read CSV weather, prepare material properties, run one full climate step, show a terminal preview, and run small module tests.
 
-Humidity, ventilation coupling, full simulation history, and result export are intentionally still incomplete and will be implemented step by step.
+Full simulation history, result export, reports, and optimization are intentionally still incomplete and will be implemented step by step.

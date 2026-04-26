@@ -46,6 +46,46 @@ struct TemperatureStepResult {
     TemperatureStepSummary summary;
 };
 
+struct HumidityPhysicsSettings {
+    bool humidityEnabled = true;
+    double humidityTransferRatePerSecond = 0.0009;
+    double ventTemperatureExchangeRatePerSecond = 0.0030;
+    double ventHumidityExchangeRatePerSecond = 0.0040;
+    double maxVentilationMixPerStep = 0.35;
+    double humidifierGainPercentPerSecond = 0.030;
+};
+
+struct ClimatePhysicsSettings {
+    TemperaturePhysicsSettings temperature;
+    HumidityPhysicsSettings humidity;
+};
+
+struct HumidityStats {
+    double minHumidityPercent = 0.0;
+    double maxHumidityPercent = 0.0;
+    double averageHumidityPercent = 0.0;
+};
+
+struct PlantHumidityStats {
+    double averageHumidityPercent = 0.0;
+    double minHumidityPercent = 0.0;
+    double maxHumidityPercent = 0.0;
+};
+
+struct ClimateStepSummary {
+    TemperatureStepSummary temperatureStep;
+    HumidityStats humidity;
+    double averageHumidityExchangeAbsPercent = 0.0;
+    double averageHumidifierGainPercent = 0.0;
+    double averageVentTemperatureDeltaC = 0.0;
+    double averageVentHumidityDeltaPercent = 0.0;
+};
+
+struct ClimateStepResult {
+    std::vector<CellState> cells;
+    ClimateStepSummary summary;
+};
+
 std::vector<CellState> makeInitialCells(
     const Grid3D& grid,
     double temperatureC,
@@ -53,8 +93,14 @@ std::vector<CellState> makeInitialCells(
 );
 
 TemperatureStats summarizeTemperature(const std::vector<CellState>& cells);
+HumidityStats summarizeHumidity(const std::vector<CellState>& cells);
 
 PlantTemperatureStats summarizePlantTemperatures(
+    const std::vector<CellState>& cells,
+    const std::vector<MappedPlantPoint>& plants
+);
+
+PlantHumidityStats summarizePlantHumidity(
     const std::vector<CellState>& cells,
     const std::vector<MappedPlantPoint>& plants
 );
@@ -67,6 +113,16 @@ TemperatureStepResult advanceTemperature(
     const MappedDeviceSet& devices,
     double timeStepSeconds,
     const TemperaturePhysicsSettings& settings = TemperaturePhysicsSettings{}
+);
+
+ClimateStepResult advanceClimate(
+    const std::vector<CellState>& current,
+    const Grid3D& grid,
+    const WeatherCondition& weather,
+    const MaterialProperties& material,
+    const MappedDeviceSet& devices,
+    double timeStepSeconds,
+    const ClimatePhysicsSettings& settings = ClimatePhysicsSettings{}
 );
 
 } // namespace greenhouse

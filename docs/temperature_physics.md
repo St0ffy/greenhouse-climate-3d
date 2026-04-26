@@ -53,23 +53,24 @@ Each heater affects cells inside its radius.
 
 The heat is distributed by distance-based weights that were prepared by `Devices`. This means Physics does not search coordinates again during every step.
 
-## Effects Not Yet Included
+## Related Day 5 Layer
 
-Ventilation and humidity are intentionally deferred to the next step.
+Ventilation and humidity are implemented in `advanceClimate`.
 
-For now:
+`advanceTemperature` is still useful as a focused temperature-only function and for tests. `advanceClimate` calls it first, then applies:
 
-- humidity values are copied unchanged;
-- vents are already mapped, but not yet used by `advanceTemperature`;
-- humidifiers are already mapped, but not yet used by humidity formulas.
+- humidity diffusion between neighboring cells;
+- humidifier moisture gain;
+- vent temperature exchange with outside air;
+- vent humidity exchange with outside air.
 
 ## Why This Design Is Useful Later
 
 The future `Simulator` can hold a vector of cells and repeatedly call:
 
 ```text
-cells = advanceTemperature(cells, ...).cells
+cells = advanceClimate(cells, ...).cells
 ```
 
-Then day 5 can extend this same pattern with ventilation and humidity instead of replacing the whole design.
+This keeps the time loop simple while leaving temperature-only tests available.
 

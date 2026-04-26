@@ -105,3 +105,17 @@ add_executable(test_optimizer
 target_link_libraries(test_optimizer PRIVATE greenhouse_core)
 
 add_test(NAME optimizer COMMAND test_optimizer)
+
+set_tests_properties(
+    geometry
+    config
+    weather
+    material
+    devices
+    physics
+    simulator
+    export_report
+    optimizer
+    PROPERTIES
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)

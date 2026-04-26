@@ -3,6 +3,7 @@
 #include "Types.h"
 
 #include <string>
+#include <vector>
 
 namespace greenhouse {
 
@@ -20,10 +21,12 @@ struct SimulationConfig {
     bool humidityEnabled = true;
     std::string humidifierMode = "medium";
     double heaterPowerW = 1000.0;
+    std::vector<VentSpec> vents;
+    std::vector<HeaterSpec> heaters;
+    std::vector<HumidifierSpec> humidifiers;
     std::vector<PlantPoint> plants;
 };
 
 SimulationConfig loadConfig(const std::string& path);
 
 } // namespace greenhouse
-

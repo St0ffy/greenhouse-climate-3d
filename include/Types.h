@@ -11,6 +11,20 @@ struct Vec3 {
     double z = 0.0;
 };
 
+struct GridIndex {
+    int x = 0;
+    int y = 0;
+    int z = 0;
+};
+
+inline bool operator==(const GridIndex& left, const GridIndex& right) {
+    return left.x == right.x && left.y == right.y && left.z == right.z;
+}
+
+inline bool operator!=(const GridIndex& left, const GridIndex& right) {
+    return !(left == right);
+}
+
 struct GridSize {
     int nx = 1;
     int ny = 1;
@@ -34,5 +48,25 @@ struct PlantPoint {
     double targetTemperatureC = 22.0;
 };
 
-} // namespace greenhouse
+struct VentSpec {
+    std::string name;
+    Vec3 position;
+    double opening = 0.0;
+    double influenceRadiusM = 1.0;
+};
 
+struct HeaterSpec {
+    std::string name;
+    Vec3 position;
+    double powerW = 1000.0;
+    double influenceRadiusM = 1.0;
+};
+
+struct HumidifierSpec {
+    std::string name;
+    Vec3 position;
+    std::string mode = "off";
+    double influenceRadiusM = 1.0;
+};
+
+} // namespace greenhouse

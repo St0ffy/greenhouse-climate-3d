@@ -89,4 +89,12 @@ struct OutputSpec {
     bool writeReport = true;
 };
 
+struct OptimizerSpec {
+    bool enabled = false;
+    double candidateStepM = 1.0;
+    int maxCandidates = 30;
+    int maxLayouts = 500;
+    double energyWeight = 0.05;
+};
+
 } // namespace greenhouse

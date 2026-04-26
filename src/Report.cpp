@@ -112,6 +112,54 @@ std::string buildSimulationReport(
     return report.str();
 }
 
+std::string buildOptimizationReport(
+    const OptimizationResult& result,
+    const Grid3D& grid
+) {
+    std::ostringstream report;
+    report << std::fixed << std::setprecision(2);
+
+    report << "Greenhouse Climate 3D Optimization Report\n";
+    report << "=========================================\n";
+    report << "Candidate positions: " << result.candidatePositions.size() << "\n";
+    report << "Tested heater layouts: " << result.testedLayouts << "\n";
+    report << "Improved: " << formatBool(result.improved) << "\n";
+    report << "Baseline quality: " << result.baselineScore.quality << "\n";
+    report << "Best quality: " << result.bestScore.quality << "\n";
+    report << "Baseline plant avg error, C: "
+           << result.baselineScore.averagePlantTemperatureErrorC << "\n";
+    report << "Best plant avg error, C: "
+           << result.bestScore.averagePlantTemperatureErrorC << "\n";
+    report << "Baseline plant max error, C: "
+           << result.baselineScore.maxPlantTemperatureErrorC << "\n";
+    report << "Best plant max error, C: "
+           << result.bestScore.maxPlantTemperatureErrorC << "\n";
+    report << "Best heater energy, kWh: " << result.bestScore.energyKWh << "\n";
+    report << "Recommendation: " << result.recommendation << "\n";
+
+    report << "\nRecommended heater positions\n";
+    report << "----------------------------\n";
+    for (const MappedHeater& heater : result.bestDevices.heaters) {
+        report << heater.spec.name
+               << ": x=" << heater.spec.position.x
+               << ", y=" << heater.spec.position.y
+               << ", z=" << heater.spec.position.z
+               << ", power_w=" << heater.spec.powerW
+               << ", cell=" << grid.formatIndex(heater.anchorCell)
+               << "\n";
+    }
+
+    report << "\nBest simulation details\n";
+    report << "-----------------------\n";
+    report << buildSimulationReport(
+        result.bestSimulation,
+        grid,
+        result.bestDevices
+    );
+
+    return report.str();
+}
+
 std::string writeReportFile(
     const std::string& reportText,
     const OutputSpec& output

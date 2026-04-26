@@ -92,6 +92,8 @@ Day 6 adds `runSimulation`. It creates the initial cell vector, calls `advanceCl
 
 Runs several simulations with different heater positions and chooses the best option using a simple quality function.
 
+Day 7 adds `optimizeHeaterPlacement`. It generates candidate heater positions on the greenhouse floor, tests layouts by running normal simulations, scores final plant temperature error plus energy, and returns the best layout.
+
 ### Exporter
 
 Writes result files to `outputs/`. It should not change simulation data.
@@ -108,8 +110,8 @@ Creates a human-readable terminal and text report.
 
 Day 6 adds a report builder and `outputs/report.txt`. The report is designed for PuTTY usage, where the user may want the result immediately in terminal text.
 
-## Day 6 Status
+## Day 7 Status
 
-The repository scaffold, geometry layer, weather timeline, material model, prepared device set, temperature physics, humidity diffusion, humidifier effects, vent exchange, full simulation loop, export, and text report are ready. The program can now run a complete baseline simulation from config and save usable output files.
+The repository scaffold, geometry layer, weather timeline, material model, prepared device set, temperature physics, humidity diffusion, humidifier effects, vent exchange, full simulation loop, export, text report, and heater placement optimization are ready. The program can now run complete baseline simulations and optimization runs from config, then save usable output files.
 
-Optimization is intentionally still incomplete and will be implemented next.
+The project is complete for the planned educational scope.

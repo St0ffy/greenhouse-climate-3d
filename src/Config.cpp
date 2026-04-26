@@ -214,6 +214,7 @@ SimulationConfig loadConfig(const std::string& path) {
     const std::string materialSection = readObject(text, "material");
     const std::string humiditySection = readObject(text, "humidity");
     const std::string outputSection = readObject(text, "output");
+    const std::string optimizerSection = readObject(text, "optimizer");
     SimulationConfig config;
 
     config.mode = readString(runSection, "mode", "simulate");
@@ -249,6 +250,13 @@ SimulationConfig loadConfig(const std::string& path) {
         readBool(outputSection, "write_csv", true),
         readBool(outputSection, "write_json", true),
         readBool(outputSection, "write_report", true)
+    };
+    config.optimizer = {
+        readBool(optimizerSection, "enabled", false),
+        readNumber(optimizerSection, "candidate_step_m", 1.0),
+        readInt(optimizerSection, "max_candidates", 30),
+        readInt(optimizerSection, "max_layouts", 500),
+        readNumber(optimizerSection, "energy_weight", 0.05)
     };
     config.heaterPowerW = readNumber(text, "power_w", 1200.0);
     config.plants = {

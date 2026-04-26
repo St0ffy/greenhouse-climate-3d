@@ -97,3 +97,11 @@ add_executable(test_export_report
 target_link_libraries(test_export_report PRIVATE greenhouse_core)
 
 add_test(NAME export_report COMMAND test_export_report)
+
+add_executable(test_optimizer
+    tests/test_optimizer.cpp
+)
+
+target_link_libraries(test_optimizer PRIVATE greenhouse_core)
+
+add_test(NAME optimizer COMMAND test_optimizer)

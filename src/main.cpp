@@ -3,6 +3,7 @@
 #include "Exporter.h"
 #include "Geometry.h"
 #include "Material.h"
+#include "Optimizer.h"
 #include "Physics.h"
 #include "Report.h"
 #include "Simulator.h"
@@ -160,16 +161,36 @@ int main(int argc, char* argv[]) {
         printPlantMapping(devices.plants, grid);
         printDeviceMapping(devices, grid);
 
+        greenhouse::ExportedFiles exported;
+        std::string reportText;
+
         if (config.mode == "optimize") {
-            std::cout << "\nOptimizer will be implemented in the next step. Running baseline simulation for now.\n";
+            std::cout << "\nRunning heater placement optimization...\n";
+            const greenhouse::OptimizationResult optimization =
+                greenhouse::optimizeHeaterPlacement(
+                    config,
+                    grid,
+                    weather,
+                    material
+                );
+
+            exported =
+                greenhouse::exportSimulationResult(
+                    optimization.bestSimulation,
+                    grid,
+                    config.output
+                );
+            reportText =
+                greenhouse::buildOptimizationReport(optimization, grid);
+        } else {
+            const greenhouse::SimulationResult result =
+                greenhouse::runSimulation(config, grid, weather, material, devices);
+            exported =
+                greenhouse::exportSimulationResult(result, grid, config.output);
+            reportText =
+                greenhouse::buildSimulationReport(result, grid, devices);
         }
 
-        const greenhouse::SimulationResult result =
-            greenhouse::runSimulation(config, grid, weather, material, devices);
-        const greenhouse::ExportedFiles exported =
-            greenhouse::exportSimulationResult(result, grid, config.output);
-        const std::string reportText =
-            greenhouse::buildSimulationReport(result, grid, devices);
         const std::string reportPath =
             greenhouse::writeReportFile(reportText, config.output);
 

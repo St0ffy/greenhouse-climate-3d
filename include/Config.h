@@ -25,6 +25,7 @@ struct SimulationConfig {
     std::vector<HumidifierSpec> humidifiers;
     std::vector<PlantPoint> plants;
     OutputSpec output;
+    OptimizerSpec optimizer;
 };
 
 SimulationConfig loadConfig(const std::string& path);

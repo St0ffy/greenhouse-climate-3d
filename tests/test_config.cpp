@@ -42,6 +42,11 @@ int main() {
     assert(config.output.writeCsv);
     assert(config.output.writeJson);
     assert(config.output.writeReport);
+    assert(!config.optimizer.enabled);
+    assert(almostEqual(config.optimizer.candidateStepM, 1.0));
+    assert(config.optimizer.maxCandidates == 30);
+    assert(config.optimizer.maxLayouts == 500);
+    assert(almostEqual(config.optimizer.energyWeight, 0.05));
 
     return 0;
 }

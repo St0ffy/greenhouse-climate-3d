@@ -90,6 +90,7 @@
     "enabled": false,
     "candidate_step_m": 1.0,
     "max_candidates": 30,
+    "max_layouts": 500,
     "energy_weight": 0.05
   },
   "output": {
@@ -99,4 +100,3 @@
     "write_report": true
   }
 }
-

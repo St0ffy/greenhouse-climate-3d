@@ -22,6 +22,17 @@
 
 `simulate` считает заданный сценарий. `optimize` проверяет варианты расположения обогревателей и пишет рекомендацию в отчет.
 
+## Рабочий пример
+
+В проекте есть готовый пример:
+
+```bash
+./build/greenhouse3d simulate examples/spring_tomatoes/config.json
+./build/greenhouse3d optimize examples/spring_tomatoes/config.json
+```
+
+Описание примера находится в `examples/spring_tomatoes/README.md`.
+
 ## Структура
 
 ```text
@@ -32,6 +43,7 @@ data/      Входные данные, например погода
 outputs/   CSV/JSON/текстовые отчеты после запуска
 tests/     Простые тесты модулей
 docs/      Архитектура и формулы проекта
+examples/  Готовые сценарии запуска
 ```
 
 ## Сборка

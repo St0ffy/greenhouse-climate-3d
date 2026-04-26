@@ -1,0 +1,108 @@
+{
+  "run": {
+    "mode": "simulate",
+    "duration_seconds": 28800,
+    "time_step_seconds": 300
+  },
+  "greenhouse": {
+    "length_m": 10.0,
+    "width_m": 5.0,
+    "height_m": 3.0
+  },
+  "grid": {
+    "nx": 10,
+    "ny": 5,
+    "nz": 4
+  },
+  "initial_state": {
+    "temperature_c": 16.0,
+    "humidity_percent": 58.0
+  },
+  "weather": {
+    "outside_temperature_c": 6.0,
+    "outside_humidity_percent": 78.0,
+    "solar_radiation_w_m2": 250.0,
+    "weather_file": "examples/spring_tomatoes/weather.csv"
+  },
+  "material": {
+    "name": "polycarbonate",
+    "heat_loss_coefficient": 0.34,
+    "solar_transmission": 0.76
+  },
+  "vents": [
+    {
+      "name": "front_roof_vent",
+      "position": [2.0, 0.4, 2.75],
+      "opening": 0.2,
+      "influence_radius_m": 1.8
+    },
+    {
+      "name": "back_roof_vent",
+      "position": [8.0, 4.6, 2.75],
+      "opening": 0.25,
+      "influence_radius_m": 1.8
+    }
+  ],
+  "heaters": [
+    {
+      "name": "left_floor_heater",
+      "position": [2.0, 2.5, 0.25],
+      "power_w": 900.0,
+      "influence_radius_m": 2.0
+    },
+    {
+      "name": "right_floor_heater",
+      "position": [8.0, 2.5, 0.25],
+      "power_w": 900.0,
+      "influence_radius_m": 2.0
+    }
+  ],
+  "humidity": {
+    "enabled": true,
+    "humidifier_mode": "low"
+  },
+  "humidifiers": [
+    {
+      "name": "center_mist",
+      "position": [5.0, 2.5, 0.8],
+      "mode": "low",
+      "influence_radius_m": 2.2
+    }
+  ],
+  "plants": [
+    {
+      "name": "tomato_row_1_left",
+      "position": [2.0, 1.5, 0.6],
+      "target_temperature_c": 23.0
+    },
+    {
+      "name": "tomato_row_1_right",
+      "position": [2.0, 3.5, 0.6],
+      "target_temperature_c": 23.0
+    },
+    {
+      "name": "tomato_row_2_left",
+      "position": [8.0, 1.5, 0.6],
+      "target_temperature_c": 23.0
+    },
+    {
+      "name": "tomato_row_2_right",
+      "position": [8.0, 3.5, 0.6],
+      "target_temperature_c": 23.0
+    }
+  ],
+  "optimizer": {
+    "enabled": true,
+    "candidate_step_m": 1.0,
+    "max_candidates": 24,
+    "max_layouts": 276,
+    "energy_weight": 0.04
+  },
+  "output": {
+    "directory": "outputs/examples/spring_tomatoes",
+    "write_csv": true,
+    "write_json": true,
+    "write_report": true
+  }
+}
+

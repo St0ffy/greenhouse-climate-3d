@@ -2,7 +2,6 @@
 
 Учебный консольный C++ проект для приближенного 3D-моделирования микроклимата в теплице.
 
-Программа будет запускаться в терминале, в том числе через PuTTY, читать настройки из конфигурационного файла и сохранять результаты симуляции в `outputs/`.
 
 ## Цель
 
@@ -67,62 +66,6 @@ tests/     Простые тесты модулей
 docs/      Архитектура и формулы проекта
 examples/  Готовые сценарии запуска
 ```
-
-## Сборка
-
-Нужны:
-
-- C++ компилятор с поддержкой C++17.
-- CMake версии 3.16 или новее.
-- Git для хранения истории и отправки на GitHub.
-
-Команды:
-
-```bash
-cmake -S . -B build
-cmake --build build
-```
-
-На Windows исполняемый файл обычно появится в одной из папок внутри `build/`, например `build/Debug/greenhouse3d.exe` при сборке Visual Studio генератором.
-
-На Linux:
-
-```bash
-./build/greenhouse3d simulate configs/default_config.json
-./build/greenhouse3d optimize configs/default_config.json
-```
-
-На Windows PowerShell:
-
-```powershell
-.\build\Debug\greenhouse3d.exe simulate configs\default_config.json
-.\build\Debug\greenhouse3d.exe optimize configs\default_config.json
-```
-
-## Запуск через PuTTY
-
-Обычно PuTTY подключается к удаленному Linux-серверу по SSH. На сервере проект нужно клонировать, собрать и запустить из терминала:
-
-```bash
-git clone <url-your-repository>
-cd greenhouse-climate-3d
-cmake -S . -B build
-cmake --build build
-./build/greenhouse3d simulate configs/default_config.json
-```
-
-Подробная инструкция по установке Git, CMake и подключению GitHub находится в `docs/setup.md`.
-
-## Работа с Windows, PuTTY и GitHub
-
-Один и тот же репозиторий можно использовать с двух рабочих мест:
-
-- на Windows вести разработку и редактировать файлы проекта;
-- через PuTTY подключаться к Linux-серверу, собирать проект и запускать симулятор;
-- через GitHub синхронизировать изменения между Windows и сервером.
-
-Перед началом работы на любой стороне выполняйте `git pull`, после изменений делайте `git add`, `git commit` и `git push`.
-
 ## Что уже сделано
 
 - Создана минимальная структура проекта.

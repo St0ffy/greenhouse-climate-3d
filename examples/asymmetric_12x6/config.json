@@ -1,0 +1,124 @@
+{
+  "run": {
+    "mode": "simulate",
+    "duration_seconds": 21600,
+    "time_step_seconds": 60
+  },
+  "greenhouse": {
+    "length_m": 12.0,
+    "width_m": 6.0,
+    "height_m": 3.0
+  },
+  "grid": {
+    "nx": 12,
+    "ny": 6,
+    "nz": 4
+  },
+  "initial_state": {
+    "temperature_c": 17.0,
+    "humidity_percent": 57.0
+  },
+  "weather": {
+    "outside_temperature_c": 5.0,
+    "outside_humidity_percent": 75.0,
+    "solar_radiation_w_m2": 350.0,
+    "weather_file": "data/weather_sample.csv"
+  },
+  "material": {
+    "name": "polycarbonate",
+    "heat_loss_coefficient": 0.35,
+    "solar_transmission": 0.75
+  },
+  "vents": [
+    {
+      "name": "wide_left_roof_vent",
+      "position": [1.5, 0.5, 2.8],
+      "opening": 0.55,
+      "influence_radius_m": 2.2
+    },
+    {
+      "name": "narrow_back_roof_vent",
+      "position": [10.5, 5.5, 2.8],
+      "opening": 0.15,
+      "influence_radius_m": 1.6
+    }
+  ],
+  "heaters": [
+    {
+      "name": "strong_left_floor_heater",
+      "position": [2.0, 1.5, 0.2],
+      "power_w": 1500.0,
+      "influence_radius_m": 2.4
+    },
+    {
+      "name": "weak_upper_right_heater",
+      "position": [9.5, 4.5, 0.2],
+      "power_w": 700.0,
+      "influence_radius_m": 1.8
+    }
+  ],
+  "humidity": {
+    "enabled": true,
+    "humidifier_mode": "medium"
+  },
+  "humidifiers": [
+    {
+      "name": "side_mist",
+      "position": [4.0, 4.5, 0.5],
+      "mode": "medium",
+      "influence_radius_m": 2.0
+    }
+  ],
+  "plants": [
+    {
+      "name": "front_left_bed",
+      "position": [2.0, 2.0, 0.5],
+      "target_temperature_c": 22.0
+    },
+    {
+      "name": "center_shifted_bed",
+      "position": [5.0, 3.0, 0.5],
+      "target_temperature_c": 22.0
+    },
+    {
+      "name": "back_right_bed",
+      "position": [9.0, 4.0, 0.5],
+      "target_temperature_c": 22.0
+    },
+    {
+      "name": "cool_far_corner_bed",
+      "position": [11.0, 1.0, 0.5],
+      "target_temperature_c": 22.0
+    }
+  ],
+  "optimizer": {
+    "enabled": false,
+    "candidate_step_m": 1.0,
+    "max_candidates": 30,
+    "max_layouts": 500,
+    "energy_weight": 0.05
+  },
+  "output": {
+    "directory": "outputs/examples/asymmetric_12x6",
+    "write_csv": true,
+    "write_json": true,
+    "write_report": true,
+    "terminal_view": {
+      "enabled": true,
+      "field": "temperature",
+      "layer_z": 0,
+      "display_stride_x": 1,
+      "display_stride_y": 1,
+      "frame_interval_seconds": 600,
+      "sleep_ms": 150,
+      "use_colors": true,
+      "clear_screen": true,
+      "loop_playback": false,
+      "show_devices": true,
+      "project_devices_to_layer": true,
+      "auto_scale": false,
+      "fixed_min_value": 0.0,
+      "fixed_max_value": 40.0
+    }
+  }
+}

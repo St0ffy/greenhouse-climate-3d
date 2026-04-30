@@ -24,6 +24,28 @@ Windows PowerShell:
 outputs/examples/spring_tomatoes/
 ```
 
+## asymmetric_12x6
+
+Несимметричный сценарий на стандартной сетке `12 x 6 x 4`:
+
+```bash
+./build/greenhouse3d simulate examples/asymmetric_12x6/config.json
+```
+
+Windows PowerShell:
+
+```powershell
+.\build-mingw\greenhouse3d.exe simulate examples\asymmetric_12x6\config.json
+```
+
+В этом примере один обогреватель сильный и смещен влево, второй слабее и смещен вправо вверх, а форточки открыты по-разному. Его удобно запускать, чтобы увидеть неравномерную температуру на терминальной карте.
+
+Результаты сохраняются в:
+
+```text
+outputs/examples/asymmetric_12x6/
+```
+
 ## large_terminal_view
 
 Большая теплица для проверки терминальной карты:

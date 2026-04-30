@@ -39,6 +39,12 @@ P plant | H heater | V vent | M humidifier | * multiple devices
 ./build/greenhouse3d optimize examples/spring_tomatoes/config.json
 ```
 
+Несимметричный пример на стандартной сетке `12 x 6 x 4`:
+
+```bash
+./build/greenhouse3d simulate examples/asymmetric_12x6/config.json
+```
+
 Большой пример с расчетной сеткой `100 x 50 x 4` и зацикленной терминальной анимацией:
 
 ```bash

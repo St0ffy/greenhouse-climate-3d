@@ -82,11 +82,27 @@ struct HumidifierSpec {
     double influenceRadiusM = 1.0;
 };
 
+struct TerminalViewSpec {
+    bool enabled = false;
+    std::string field = "temperature";
+    int layerZ = 0;
+    double frameIntervalSeconds = 600.0;
+    int sleepMs = 120;
+    bool useColors = true;
+    bool clearScreen = true;
+    bool showDevices = true;
+    bool projectDevicesToLayer = true;
+    bool autoScale = true;
+    double fixedMinValue = 0.0;
+    double fixedMaxValue = 40.0;
+};
+
 struct OutputSpec {
     std::string directory = "outputs";
     bool writeCsv = true;
     bool writeJson = true;
     bool writeReport = true;
+    TerminalViewSpec terminalView;
 };
 
 struct OptimizerSpec {

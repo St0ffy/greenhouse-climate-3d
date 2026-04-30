@@ -42,6 +42,18 @@ int main() {
     assert(config.output.writeCsv);
     assert(config.output.writeJson);
     assert(config.output.writeReport);
+    assert(config.output.terminalView.enabled);
+    assert(config.output.terminalView.field == "temperature");
+    assert(config.output.terminalView.layerZ == 0);
+    assert(almostEqual(config.output.terminalView.frameIntervalSeconds, 600.0));
+    assert(config.output.terminalView.sleepMs == 150);
+    assert(config.output.terminalView.useColors);
+    assert(config.output.terminalView.clearScreen);
+    assert(config.output.terminalView.showDevices);
+    assert(config.output.terminalView.projectDevicesToLayer);
+    assert(!config.output.terminalView.autoScale);
+    assert(almostEqual(config.output.terminalView.fixedMinValue, 0.0));
+    assert(almostEqual(config.output.terminalView.fixedMaxValue, 40.0));
     assert(!config.optimizer.enabled);
     assert(almostEqual(config.optimizer.candidateStepM, 1.0));
     assert(config.optimizer.maxCandidates == 30);

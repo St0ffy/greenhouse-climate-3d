@@ -20,6 +20,7 @@ add_library(greenhouse_core
     src/Optimizer.cpp
     src/Exporter.cpp
     src/Report.cpp
+    src/TerminalView.cpp
 )
 
 target_include_directories(greenhouse_core PUBLIC

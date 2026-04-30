@@ -7,6 +7,7 @@
 #include "Physics.h"
 #include "Report.h"
 #include "Simulator.h"
+#include "TerminalView.h"
 #include "Weather.h"
 
 #include <exception>
@@ -185,6 +186,7 @@ int main(int argc, char* argv[]) {
         } else {
             const greenhouse::SimulationResult result =
                 greenhouse::runSimulation(config, grid, weather, material, devices);
+            greenhouse::replaySimulationInTerminal(result, grid, devices);
             exported =
                 greenhouse::exportSimulationResult(result, grid, config.output);
             reportText =

@@ -214,6 +214,8 @@ SimulationConfig loadConfig(const std::string& path) {
     const std::string materialSection = readObject(text, "material");
     const std::string humiditySection = readObject(text, "humidity");
     const std::string outputSection = readObject(text, "output");
+    const std::string terminalViewSection =
+        readObject(outputSection, "terminal_view");
     const std::string optimizerSection = readObject(text, "optimizer");
     SimulationConfig config;
 
@@ -249,7 +251,21 @@ SimulationConfig loadConfig(const std::string& path) {
         readString(outputSection, "directory", "outputs"),
         readBool(outputSection, "write_csv", true),
         readBool(outputSection, "write_json", true),
-        readBool(outputSection, "write_report", true)
+        readBool(outputSection, "write_report", true),
+        {
+            readBool(terminalViewSection, "enabled", false),
+            readString(terminalViewSection, "field", "temperature"),
+            readInt(terminalViewSection, "layer_z", 0),
+            readNumber(terminalViewSection, "frame_interval_seconds", 600.0),
+            readInt(terminalViewSection, "sleep_ms", 120),
+            readBool(terminalViewSection, "use_colors", true),
+            readBool(terminalViewSection, "clear_screen", true),
+            readBool(terminalViewSection, "show_devices", true),
+            readBool(terminalViewSection, "project_devices_to_layer", true),
+            readBool(terminalViewSection, "auto_scale", true),
+            readNumber(terminalViewSection, "fixed_min_value", 0.0),
+            readNumber(terminalViewSection, "fixed_max_value", 40.0)
+        }
     };
     config.optimizer = {
         readBool(optimizerSection, "enabled", false),

@@ -97,6 +97,20 @@
     "directory": "outputs",
     "write_csv": true,
     "write_json": true,
-    "write_report": true
+    "write_report": true,
+    "terminal_view": {
+      "enabled": true,
+      "field": "temperature",
+      "layer_z": 0,
+      "frame_interval_seconds": 600,
+      "sleep_ms": 150,
+      "use_colors": true,
+      "clear_screen": true,
+      "show_devices": true,
+      "project_devices_to_layer": true,
+      "auto_scale": false,
+      "fixed_min_value": 0.0,
+      "fixed_max_value": 40.0
+    }
   }
 }

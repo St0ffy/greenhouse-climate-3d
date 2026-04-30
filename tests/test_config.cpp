@@ -49,6 +49,7 @@ int main() {
     assert(config.output.terminalView.sleepMs == 150);
     assert(config.output.terminalView.useColors);
     assert(config.output.terminalView.clearScreen);
+    assert(!config.output.terminalView.loopPlayback);
     assert(config.output.terminalView.showDevices);
     assert(config.output.terminalView.projectDevicesToLayer);
     assert(!config.output.terminalView.autoScale);

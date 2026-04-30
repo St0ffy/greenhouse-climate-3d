@@ -260,6 +260,11 @@ SimulationConfig loadConfig(const std::string& path) {
             readInt(terminalViewSection, "sleep_ms", 120),
             readBool(terminalViewSection, "use_colors", true),
             readBool(terminalViewSection, "clear_screen", true),
+            readBool(
+                terminalViewSection,
+                "loop_playback",
+                readBool(terminalViewSection, "loop", false)
+            ),
             readBool(terminalViewSection, "show_devices", true),
             readBool(terminalViewSection, "project_devices_to_layer", true),
             readBool(terminalViewSection, "auto_scale", true),

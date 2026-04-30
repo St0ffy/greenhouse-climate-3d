@@ -106,6 +106,7 @@
       "sleep_ms": 150,
       "use_colors": true,
       "clear_screen": true,
+      "loop_playback": false,
       "show_devices": true,
       "project_devices_to_layer": true,
       "auto_scale": false,

@@ -11,6 +11,16 @@
 #include <thread>
 #include <vector>
 
+#ifdef _WIN32
+#include <conio.h>
+#include <cstdio>
+#include <io.h>
+#else
+#include <sys/select.h>
+#include <termios.h>
+#include <unistd.h>
+#endif
+
 namespace greenhouse {
 
 namespace {
@@ -20,6 +30,83 @@ constexpr const char* kScale = " .:-=+*#%@";
 struct ValueRange {
     double minValue = 0.0;
     double maxValue = 1.0;
+};
+
+class TerminalInput {
+public:
+    TerminalInput() {
+#ifdef _WIN32
+        interactive_ = _isatty(_fileno(stdin)) != 0;
+#else
+        interactive_ = isatty(STDIN_FILENO) != 0;
+        if (interactive_ && tcgetattr(STDIN_FILENO, &original_) == 0) {
+            termios raw = original_;
+            raw.c_lflag &= static_cast<tcflag_t>(~(ICANON | ECHO));
+            raw.c_cc[VMIN] = 0;
+            raw.c_cc[VTIME] = 0;
+            active_ = tcsetattr(STDIN_FILENO, TCSANOW, &raw) == 0;
+        }
+#endif
+    }
+
+    TerminalInput(const TerminalInput&) = delete;
+    TerminalInput& operator=(const TerminalInput&) = delete;
+
+    ~TerminalInput() {
+#ifndef _WIN32
+        if (active_) {
+            tcsetattr(STDIN_FILENO, TCSANOW, &original_);
+        }
+#endif
+    }
+
+    bool isInteractive() const {
+        return interactive_;
+    }
+
+    bool escapePressed() {
+        if (!interactive_) {
+            return false;
+        }
+
+#ifdef _WIN32
+        while (_kbhit() != 0) {
+            if (_getch() == 27) {
+                return true;
+            }
+        }
+        return false;
+#else
+        if (!active_) {
+            return false;
+        }
+
+        fd_set readSet;
+        timeval timeout{};
+        FD_ZERO(&readSet);
+        FD_SET(STDIN_FILENO, &readSet);
+
+        if (select(STDIN_FILENO + 1, &readSet, nullptr, nullptr, &timeout) <= 0) {
+            return false;
+        }
+
+        char ch = '\0';
+        while (read(STDIN_FILENO, &ch, 1) == 1) {
+            if (ch == 27) {
+                return true;
+            }
+        }
+
+        return false;
+#endif
+    }
+
+private:
+    bool interactive_ = false;
+#ifndef _WIN32
+    bool active_ = false;
+    termios original_{};
+#endif
 };
 
 std::string normalizedField(const std::string& field) {
@@ -285,6 +372,9 @@ void printFrame(
     std::cout << "Layer z = " << layerZ << "\n";
     std::cout << "Range: " << range.minValue << " .. "
               << range.maxValue << "\n\n";
+    if (view.loopPlayback) {
+        std::cout << "Loop playback: press Esc to stop animation\n\n";
+    }
 
     for (int y = size.ny - 1; y >= 0; --y) {
         for (int x = 0; x < size.nx; ++x) {
@@ -330,23 +420,40 @@ void printFrame(
     std::cout << std::flush;
 }
 
-} // namespace
-
-void replaySimulationInTerminal(
-    const SimulationResult& result,
-    const Grid3D& grid,
-    const MappedDeviceSet& devices
-) {
-    const TerminalViewSpec& view = result.config.output.terminalView;
-
-    if (!view.enabled || result.frames.empty()) {
-        return;
+bool sleepOrStop(int sleepMs, TerminalInput& input) {
+    if (input.escapePressed()) {
+        return true;
     }
 
+    int remainingMs = sleepMs;
+    while (remainingMs > 0) {
+        const int chunkMs = std::min(remainingMs, 25);
+        std::this_thread::sleep_for(std::chrono::milliseconds(chunkMs));
+        remainingMs -= chunkMs;
+
+        if (input.escapePressed()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool replayOnce(
+    const SimulationResult& result,
+    const Grid3D& grid,
+    const MappedDeviceSet& devices,
+    const TerminalViewSpec& view,
+    TerminalInput& input
+) {
     double nextFrameTime = 0.0;
     const SimulationFrame* lastPrintedFrame = nullptr;
 
     for (const SimulationFrame& frame : result.frames) {
+        if (input.escapePressed()) {
+            return true;
+        }
+
         if (view.frameIntervalSeconds > 0.0
             && frame.timeSeconds + 1e-9 < nextFrameTime) {
             continue;
@@ -361,16 +468,46 @@ void replaySimulationInTerminal(
             }
         }
 
-        if (view.sleepMs > 0) {
-            std::this_thread::sleep_for(
-                std::chrono::milliseconds(view.sleepMs)
-            );
+        if (view.sleepMs > 0 && sleepOrStop(view.sleepMs, input)) {
+            return true;
         }
     }
 
     const SimulationFrame& finalFrame = result.frames.back();
     if (lastPrintedFrame != &finalFrame) {
         printFrame(finalFrame, grid, devices, view);
+        if (view.sleepMs > 0 && sleepOrStop(view.sleepMs, input)) {
+            return true;
+        }
+    }
+
+    return input.escapePressed();
+}
+
+} // namespace
+
+void replaySimulationInTerminal(
+    const SimulationResult& result,
+    const Grid3D& grid,
+    const MappedDeviceSet& devices
+) {
+    const TerminalViewSpec& view = result.config.output.terminalView;
+
+    if (!view.enabled || result.frames.empty()) {
+        return;
+    }
+
+    TerminalInput input;
+
+    if (!view.loopPlayback || !input.isInteractive()) {
+        replayOnce(result, grid, devices, view, input);
+        return;
+    }
+
+    while (true) {
+        if (replayOnce(result, grid, devices, view, input)) {
+            break;
+        }
     }
 }
 

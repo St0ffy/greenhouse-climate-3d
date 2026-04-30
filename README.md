@@ -39,7 +39,13 @@ P plant | H heater | V vent | M humidifier | * multiple devices
 ./build/greenhouse3d optimize examples/spring_tomatoes/config.json
 ```
 
-Описание примера находится в `examples/spring_tomatoes/README.md`.
+Большой пример с сеткой `100 x 50 x 4` и зацикленной терминальной анимацией:
+
+```bash
+./build/greenhouse3d simulate examples/large_terminal_view/config.json
+```
+
+Описание примеров находится в `examples/README.md`.
 
 ## Структура
 

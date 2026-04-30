@@ -90,6 +90,7 @@ struct TerminalViewSpec {
     int sleepMs = 120;
     bool useColors = true;
     bool clearScreen = true;
+    bool loopPlayback = false;
     bool showDevices = true;
     bool projectDevicesToLayer = true;
     bool autoScale = true;

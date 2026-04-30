@@ -1,0 +1,177 @@
+{
+  "run": {
+    "mode": "simulate",
+    "duration_seconds": 43200,
+    "time_step_seconds": 300
+  },
+  "greenhouse": {
+    "length_m": 100.0,
+    "width_m": 50.0,
+    "height_m": 4.0
+  },
+  "grid": {
+    "nx": 100,
+    "ny": 50,
+    "nz": 4
+  },
+  "initial_state": {
+    "temperature_c": 17.0,
+    "humidity_percent": 62.0
+  },
+  "weather": {
+    "outside_temperature_c": 4.0,
+    "outside_humidity_percent": 82.0,
+    "solar_radiation_w_m2": 180.0,
+    "weather_file": "examples/large_terminal_view/weather.csv"
+  },
+  "material": {
+    "name": "polycarbonate",
+    "heat_loss_coefficient": 0.32,
+    "solar_transmission": 0.78
+  },
+  "vents": [
+    {
+      "name": "front_left_roof_vent",
+      "position": [15.0, 3.0, 3.7],
+      "opening": 0.25,
+      "influence_radius_m": 8.0
+    },
+    {
+      "name": "front_right_roof_vent",
+      "position": [85.0, 3.0, 3.7],
+      "opening": 0.25,
+      "influence_radius_m": 8.0
+    },
+    {
+      "name": "back_left_roof_vent",
+      "position": [15.0, 47.0, 3.7],
+      "opening": 0.35,
+      "influence_radius_m": 8.0
+    },
+    {
+      "name": "back_right_roof_vent",
+      "position": [85.0, 47.0, 3.7],
+      "opening": 0.35,
+      "influence_radius_m": 8.0
+    }
+  ],
+  "heaters": [
+    {
+      "name": "heater_west",
+      "position": [20.0, 25.0, 0.35],
+      "power_w": 4500.0,
+      "influence_radius_m": 9.0
+    },
+    {
+      "name": "heater_mid_west",
+      "position": [40.0, 25.0, 0.35],
+      "power_w": 4500.0,
+      "influence_radius_m": 9.0
+    },
+    {
+      "name": "heater_mid_east",
+      "position": [60.0, 25.0, 0.35],
+      "power_w": 4500.0,
+      "influence_radius_m": 9.0
+    },
+    {
+      "name": "heater_east",
+      "position": [80.0, 25.0, 0.35],
+      "power_w": 4500.0,
+      "influence_radius_m": 9.0
+    }
+  ],
+  "humidity": {
+    "enabled": true,
+    "humidifier_mode": "medium"
+  },
+  "humidifiers": [
+    {
+      "name": "mist_west",
+      "position": [30.0, 25.0, 0.8],
+      "mode": "medium",
+      "influence_radius_m": 10.0
+    },
+    {
+      "name": "mist_east",
+      "position": [70.0, 25.0, 0.8],
+      "mode": "medium",
+      "influence_radius_m": 10.0
+    }
+  ],
+  "plants": [
+    {
+      "name": "row_1_west",
+      "position": [20.0, 15.0, 0.6],
+      "target_temperature_c": 22.5
+    },
+    {
+      "name": "row_1_center",
+      "position": [50.0, 15.0, 0.6],
+      "target_temperature_c": 22.5
+    },
+    {
+      "name": "row_1_east",
+      "position": [80.0, 15.0, 0.6],
+      "target_temperature_c": 22.5
+    },
+    {
+      "name": "row_2_west",
+      "position": [20.0, 25.0, 0.6],
+      "target_temperature_c": 22.5
+    },
+    {
+      "name": "row_2_center",
+      "position": [50.0, 25.0, 0.6],
+      "target_temperature_c": 22.5
+    },
+    {
+      "name": "row_2_east",
+      "position": [80.0, 25.0, 0.6],
+      "target_temperature_c": 22.5
+    },
+    {
+      "name": "row_3_west",
+      "position": [20.0, 35.0, 0.6],
+      "target_temperature_c": 22.5
+    },
+    {
+      "name": "row_3_center",
+      "position": [50.0, 35.0, 0.6],
+      "target_temperature_c": 22.5
+    },
+    {
+      "name": "row_3_east",
+      "position": [80.0, 35.0, 0.6],
+      "target_temperature_c": 22.5
+    }
+  ],
+  "optimizer": {
+    "enabled": false,
+    "candidate_step_m": 5.0,
+    "max_candidates": 30,
+    "max_layouts": 500,
+    "energy_weight": 0.05
+  },
+  "output": {
+    "directory": "outputs/examples/large_terminal_view",
+    "write_csv": false,
+    "write_json": true,
+    "write_report": true,
+    "terminal_view": {
+      "enabled": true,
+      "field": "temperature",
+      "layer_z": 0,
+      "frame_interval_seconds": 1800,
+      "sleep_ms": 90,
+      "use_colors": true,
+      "clear_screen": true,
+      "loop_playback": true,
+      "show_devices": true,
+      "project_devices_to_layer": true,
+      "auto_scale": false,
+      "fixed_min_value": 0.0,
+      "fixed_max_value": 45.0
+    }
+  }
+}

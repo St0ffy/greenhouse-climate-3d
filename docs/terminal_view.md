@@ -27,6 +27,7 @@
   "sleep_ms": 150,
   "use_colors": true,
   "clear_screen": true,
+  "loop_playback": false,
   "show_devices": true,
   "project_devices_to_layer": true,
   "auto_scale": false,
@@ -87,10 +88,28 @@ M humidifier
 "clear_screen": false
 ```
 
+Если нужно зациклить анимацию до нажатия `Esc`:
+
+```json
+"loop_playback": true
+```
+
+В интерактивном терминале PuTTY клавиша `Esc` останавливает анимацию без нажатия Enter. После этого программа продолжает обычный сценарий: экспортирует файлы и печатает отчет.
+
 Скорость анимации:
 
 - `frame_interval_seconds` - какой шаг симуляционного времени показывать.
 - `sleep_ms` - реальная задержка между кадрами в терминале.
+
+## Большая сетка
+
+Для проверки крупной карты есть отдельный пример:
+
+```bash
+./build/greenhouse3d simulate examples/large_terminal_view/config.json
+```
+
+В нем сетка `100 x 50 x 4`, длительность `43200` секунд, а `loop_playback` включен. CSV в этом примере отключен, чтобы не создавать огромный файл истории всех ячеек.
 
 ## Архитектура
 

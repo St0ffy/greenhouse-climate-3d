@@ -162,6 +162,8 @@
       "enabled": true,
       "field": "temperature",
       "layer_z": 0,
+      "display_stride_x": 5,
+      "display_stride_y": 5,
       "frame_interval_seconds": 1800,
       "sleep_ms": 90,
       "use_colors": true,

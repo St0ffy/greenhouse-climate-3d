@@ -39,11 +39,13 @@ P plant | H heater | V vent | M humidifier | * multiple devices
 ./build/greenhouse3d optimize examples/spring_tomatoes/config.json
 ```
 
-Большой пример с сеткой `100 x 50 x 4` и зацикленной терминальной анимацией:
+Большой пример с расчетной сеткой `100 x 50 x 4` и зацикленной терминальной анимацией:
 
 ```bash
 ./build/greenhouse3d simulate examples/large_terminal_view/config.json
 ```
+
+В этом примере терминальная карта специально прорежена до компактного вида, чтобы не ломать экран PuTTY.
 
 Описание примеров находится в `examples/README.md`.
 

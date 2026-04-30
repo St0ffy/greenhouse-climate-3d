@@ -86,6 +86,8 @@ struct TerminalViewSpec {
     bool enabled = false;
     std::string field = "temperature";
     int layerZ = 0;
+    int displayStrideX = 1;
+    int displayStrideY = 1;
     double frameIntervalSeconds = 600.0;
     int sleepMs = 120;
     bool useColors = true;

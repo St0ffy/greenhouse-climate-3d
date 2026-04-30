@@ -45,6 +45,8 @@ int main() {
     assert(config.output.terminalView.enabled);
     assert(config.output.terminalView.field == "temperature");
     assert(config.output.terminalView.layerZ == 0);
+    assert(config.output.terminalView.displayStrideX == 1);
+    assert(config.output.terminalView.displayStrideY == 1);
     assert(almostEqual(config.output.terminalView.frameIntervalSeconds, 600.0));
     assert(config.output.terminalView.sleepMs == 150);
     assert(config.output.terminalView.useColors);

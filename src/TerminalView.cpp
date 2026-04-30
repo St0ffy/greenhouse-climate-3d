@@ -204,6 +204,10 @@ char valueToSymbol(double value, const ValueRange& range) {
     return scale[index];
 }
 
+int positiveStride(int stride) {
+    return std::max(1, stride);
+}
+
 bool sameViewCell(
     const GridIndex& deviceCell,
     int x,
@@ -212,6 +216,26 @@ bool sameViewCell(
     bool projectDevicesToLayer
 ) {
     if (deviceCell.x != x || deviceCell.y != y) {
+        return false;
+    }
+
+    return projectDevicesToLayer || deviceCell.z == z;
+}
+
+bool cellInViewBlock(
+    const GridIndex& deviceCell,
+    int minX,
+    int maxX,
+    int minY,
+    int maxY,
+    int z,
+    bool projectDevicesToLayer
+) {
+    if (deviceCell.x < minX || deviceCell.x > maxX) {
+        return false;
+    }
+
+    if (deviceCell.y < minY || deviceCell.y > maxY) {
         return false;
     }
 
@@ -257,6 +281,45 @@ char deviceSymbolAt(
 
     for (const MappedHumidifier& humidifier : devices.humidifiers) {
         if (sameViewCell(humidifier.anchorCell, x, y, z, projectDevicesToLayer)) {
+            addDeviceSymbol('M', deviceCount, symbol);
+        }
+    }
+
+    return symbol;
+}
+
+char deviceSymbolInBlock(
+    int minX,
+    int maxX,
+    int minY,
+    int maxY,
+    int z,
+    const MappedDeviceSet& devices,
+    bool projectDevicesToLayer
+) {
+    int deviceCount = 0;
+    char symbol = '\0';
+
+    for (const MappedPlantPoint& plant : devices.plants) {
+        if (cellInViewBlock(plant.cell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
+            addDeviceSymbol('P', deviceCount, symbol);
+        }
+    }
+
+    for (const MappedHeater& heater : devices.heaters) {
+        if (cellInViewBlock(heater.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
+            addDeviceSymbol('H', deviceCount, symbol);
+        }
+    }
+
+    for (const MappedVent& vent : devices.vents) {
+        if (cellInViewBlock(vent.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
+            addDeviceSymbol('V', deviceCount, symbol);
+        }
+    }
+
+    for (const MappedHumidifier& humidifier : devices.humidifiers) {
+        if (cellInViewBlock(humidifier.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
             addDeviceSymbol('M', deviceCount, symbol);
         }
     }
@@ -319,6 +382,37 @@ int clampedLayerZ(const Grid3D& grid, int requestedLayerZ) {
     return std::clamp(requestedLayerZ, 0, grid.gridSize().nz - 1);
 }
 
+double blockFieldValue(
+    const SimulationFrame& frame,
+    const Grid3D& grid,
+    const TerminalViewSpec& view,
+    int minX,
+    int maxX,
+    int minY,
+    int maxY,
+    int z
+) {
+    double total = 0.0;
+    int count = 0;
+
+    for (int y = minY; y <= maxY; ++y) {
+        for (int x = minX; x <= maxX; ++x) {
+            const GridIndex index{x, y, z};
+            const std::size_t linear = grid.linearIndex(index);
+            if (linear < frame.cells.size()) {
+                total += cellFieldValue(frame.cells[linear], frame, view.field);
+                ++count;
+            }
+        }
+    }
+
+    if (count == 0) {
+        return 0.0;
+    }
+
+    return total / static_cast<double>(count);
+}
+
 void printSymbol(char symbol, const char* color, bool useColors) {
     if (useColors) {
         std::cout << color << symbol << "\033[0m";
@@ -360,9 +454,11 @@ void printFrame(
     const int layerZ = clampedLayerZ(grid, view.layerZ);
     const ValueRange range = frameValueRange(frame, view);
     const GridSize size = grid.gridSize();
+    const int strideX = positiveStride(view.displayStrideX);
+    const int strideY = positiveStride(view.displayStrideY);
 
     if (view.clearScreen) {
-        std::cout << "\033[2J\033[H";
+        std::cout << "\033[H\033[J";
     }
 
     std::cout << std::fixed << std::setprecision(2);
@@ -372,29 +468,32 @@ void printFrame(
     std::cout << "Layer z = " << layerZ << "\n";
     std::cout << "Range: " << range.minValue << " .. "
               << range.maxValue << "\n\n";
+    if (strideX > 1 || strideY > 1) {
+        std::cout << "Display stride: "
+                  << strideX << " x " << strideY
+                  << " grid cells per terminal symbol\n\n";
+    }
     if (view.loopPlayback) {
         std::cout << "Loop playback: press Esc to stop animation\n\n";
     }
 
-    for (int y = size.ny - 1; y >= 0; --y) {
-        for (int x = 0; x < size.nx; ++x) {
-            const GridIndex index{x, y, layerZ};
-            const std::size_t linear = grid.linearIndex(index);
+    for (int yTop = size.ny - 1; yTop >= 0; yTop -= strideY) {
+        const int minY = std::max(0, yTop - strideY + 1);
+        const int maxY = yTop;
 
-            if (linear >= frame.cells.size()) {
-                printSymbol('?', "\033[31m", view.useColors);
-                continue;
-            }
-
-            const CellState& cell = frame.cells[linear];
-            const double value = cellFieldValue(cell, frame, view.field);
+        for (int minX = 0; minX < size.nx; minX += strideX) {
+            const int maxX = std::min(size.nx - 1, minX + strideX - 1);
+            const double value =
+                blockFieldValue(frame, grid, view, minX, maxX, minY, maxY, layerZ);
             char symbol = valueToSymbol(value, range);
             const char* color = valueColor(value, range);
 
             if (view.showDevices) {
-                const char device = deviceSymbolAt(
-                    x,
-                    y,
+                const char device = deviceSymbolInBlock(
+                    minX,
+                    maxX,
+                    minY,
+                    maxY,
                     layerZ,
                     devices,
                     view.projectDevicesToLayer

@@ -38,7 +38,7 @@ Windows PowerShell:
 .\build-mingw\greenhouse3d.exe simulate examples\large_terminal_view\config.json
 ```
 
-Сценарий использует сетку `100 x 50 x 4`, длительность `43200` секунд и зацикленную анимацию до нажатия `Esc`.
+Сценарий использует расчетную сетку `100 x 50 x 4`, длительность `43200` секунд и зацикленную анимацию до нажатия `Esc`. Для PuTTY карта прорежена до компактного вида через `display_stride_x` и `display_stride_y`.
 
 Результаты сохраняются в:
 

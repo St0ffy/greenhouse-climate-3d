@@ -256,6 +256,8 @@ SimulationConfig loadConfig(const std::string& path) {
             readBool(terminalViewSection, "enabled", false),
             readString(terminalViewSection, "field", "temperature"),
             readInt(terminalViewSection, "layer_z", 0),
+            readInt(terminalViewSection, "display_stride_x", 1),
+            readInt(terminalViewSection, "display_stride_y", 1),
             readNumber(terminalViewSection, "frame_interval_seconds", 600.0),
             readInt(terminalViewSection, "sleep_ms", 120),
             readBool(terminalViewSection, "use_colors", true),

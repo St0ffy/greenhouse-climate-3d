@@ -912,20 +912,27 @@ bool replayOnce(
     return input.escapePressed();
 }
 
-void moveCursor(GridIndex& cursor, const Grid3D& grid, TerminalKey key) {
+void moveCursor(
+    GridIndex& cursor,
+    const Grid3D& grid,
+    const TerminalViewSpec& view,
+    TerminalKey key
+) {
     GridIndex next = cursor;
+    const int strideX = positiveStride(view.displayStrideX);
+    const int strideY = positiveStride(view.displayStrideY);
     switch (key) {
         case TerminalKey::Up:
-            ++next.y;
+            next.y += strideY;
             break;
         case TerminalKey::Down:
-            --next.y;
+            next.y -= strideY;
             break;
         case TerminalKey::Left:
-            --next.x;
+            next.x -= strideX;
             break;
         case TerminalKey::Right:
-            ++next.x;
+            next.x += strideX;
             break;
         default:
             break;
@@ -969,7 +976,7 @@ bool handleInteractiveKey(
         case TerminalKey::Down:
         case TerminalKey::Left:
         case TerminalKey::Right:
-            moveCursor(cursor, grid, key);
+            moveCursor(cursor, grid, view, key);
             return true;
         case TerminalKey::Enter:
         case TerminalKey::ToggleFailure:

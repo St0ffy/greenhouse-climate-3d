@@ -99,6 +99,9 @@
   "controller": {
     "enabled": true,
     "ml_enabled": true,
+    "ml_memory_enabled": true,
+    "ml_memory_path": "outputs/ml_policy.json",
+    "ml_memory_save_every_steps": 50,
     "energy_weight": 0.08,
     "learning_rate": 0.25,
     "exploration_rate": 0.12,

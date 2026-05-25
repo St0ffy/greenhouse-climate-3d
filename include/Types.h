@@ -148,6 +148,9 @@ struct PlantPhysicsSpec {
 struct ClimateControlSpec {
     bool enabled = false;
     bool mlEnabled = false;
+    bool mlMemoryEnabled = true;
+    std::string mlMemoryPath = "outputs/ml_policy.json";
+    int mlMemorySaveEverySteps = 50;
     double energyWeight = 0.08;
     double learningRate = 0.25;
     double explorationRate = 0.10;

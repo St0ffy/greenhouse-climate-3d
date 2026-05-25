@@ -73,8 +73,11 @@ private:
     double currentTime_ = 0.0;
     double cumulativeHeaterEnergy_ = 0.0;
     double cumulativeDeviceEnergy_ = 0.0;
+    int mlMemoryStepsSinceSave_ = 0;
+    bool mlMemoryActive_ = false;
 
     void updateInitialLight();
+    void maybeSaveMlPolicy(bool force);
     void appendFrame(
         const WeatherCondition& weather,
         const ClimateStepSummary& climate,

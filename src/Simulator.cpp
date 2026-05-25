@@ -78,6 +78,14 @@ SimulationStepper::SimulationStepper(
     controller_(config.control),
     devices_(devices) {
     validateSimulationConfig(config_);
+    mlMemoryActive_ =
+        config_.mode == "simulate"
+        && config_.control.enabled
+        && config_.control.mlEnabled
+        && config_.control.mlMemoryEnabled;
+    if (mlMemoryActive_) {
+        controller_.loadPolicy(config_.control.mlMemoryPath);
+    }
 
     settings_.humidity.humidityEnabled = config_.humidityEnabled;
     settings_.humidity.plantHumidityUptakePercentPerSecond =
@@ -117,6 +125,22 @@ void SimulationStepper::updateInitialLight() {
         const GridIndex index = grid_.indexFromLinear(linear);
         cells_[linear].lightWm2 =
             estimateCellLightWm2(grid_, index, weather, material_);
+    }
+}
+
+void SimulationStepper::maybeSaveMlPolicy(bool force) {
+    if (!mlMemoryActive_) {
+        return;
+    }
+
+    const int saveEvery =
+        std::max(1, config_.control.mlMemorySaveEverySteps);
+    if (!force && mlMemoryStepsSinceSave_ < saveEvery) {
+        return;
+    }
+
+    if (controller_.savePolicy(config_.control.mlMemoryPath)) {
+        mlMemoryStepsSinceSave_ = 0;
     }
 }
 
@@ -194,6 +218,8 @@ void SimulationStepper::step() {
     plantStates_ = plantGrowth.plants;
 
     controller_.learn(plantGrowth.stats, climate.summary.totalDeviceEnergyKWh);
+    ++mlMemoryStepsSinceSave_;
+    maybeSaveMlPolicy(finished());
     control.reward = controller_.lastReward();
     control.activeHeaterPowerW = devices_.totalHeaterPowerW;
     control.averageVentOpening = devices_.averageVentOpening;

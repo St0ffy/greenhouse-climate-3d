@@ -1,6 +1,9 @@
 #include "Controller.h"
 
 #include <cassert>
+#include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <vector>
 
 int main() {
@@ -50,6 +53,28 @@ int main() {
     stats.averageHealth = 1.0;
     controller.learn(stats, 0.01);
     assert(controller.lastReward() > 0.0);
+
+    const std::filesystem::path policyPath =
+        std::filesystem::path("outputs") / "test_ml_policy.json";
+    std::filesystem::remove(policyPath);
+    assert(!controller.loadPolicy(policyPath.string()));
+    assert(controller.savePolicy(policyPath.string()));
+    assert(std::filesystem::exists(policyPath));
+
+    greenhouse::ClimateControlSpec mlSpec;
+    mlSpec.enabled = true;
+    mlSpec.mlEnabled = true;
+    greenhouse::AdaptiveClimateController loadedController(mlSpec);
+    assert(loadedController.loadPolicy(policyPath.string()));
+    assert(std::fabs(loadedController.lastReward() - controller.lastReward()) < 1e-9);
+
+    {
+        std::ofstream invalidPolicy(policyPath);
+        invalidPolicy << "{ \"version\": 1, \"action_count\": 1, "
+                      << "\"action_values\": [0.0] }";
+    }
+    assert(!loadedController.loadPolicy(policyPath.string()));
+    std::filesystem::remove(policyPath);
 
     return 0;
 }

@@ -316,6 +316,9 @@ SimulationConfig loadConfig(const std::string& path) {
     config.control = {
         readBool(controlSection, "enabled", false),
         readBool(controlSection, "ml_enabled", false),
+        readBool(controlSection, "ml_memory_enabled", true),
+        readString(controlSection, "ml_memory_path", "outputs/ml_policy.json"),
+        readInt(controlSection, "ml_memory_save_every_steps", 50),
         readNumber(controlSection, "energy_weight", 0.08),
         readNumber(controlSection, "learning_rate", 0.25),
         readNumber(controlSection, "exploration_rate", 0.10),

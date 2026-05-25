@@ -27,6 +27,8 @@ public:
     );
 
     double lastReward() const;
+    bool loadPolicy(const std::string& path);
+    bool savePolicy(const std::string& path) const;
 
 private:
     ClimateControlSpec spec_;

@@ -2,6 +2,15 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
+#include <ctime>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
+#include <regex>
+#include <sstream>
 
 namespace greenhouse {
 
@@ -122,6 +131,84 @@ int countActiveHumidifiers(const MappedDeviceSet& devices) {
     return count;
 }
 
+std::string currentTimestamp() {
+    const auto now = std::chrono::system_clock::now();
+    const std::time_t time = std::chrono::system_clock::to_time_t(now);
+    std::tm localTime{};
+#ifdef _WIN32
+    localtime_s(&localTime, &time);
+#else
+    localtime_r(&time, &localTime);
+#endif
+
+    std::ostringstream output;
+    output << std::put_time(&localTime, "%Y-%m-%d %H:%M:%S");
+    return output.str();
+}
+
+bool readDoubleField(const std::string& text, const std::string& key, double& value) {
+    const std::regex pattern(
+        "\"" + key + "\"\\s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)"
+    );
+    std::smatch match;
+    if (!std::regex_search(text, match, pattern)) {
+        return false;
+    }
+
+    value = std::stod(match[1].str());
+    return true;
+}
+
+bool readIntField(const std::string& text, const std::string& key, int& value) {
+    double numeric = 0.0;
+    if (!readDoubleField(text, key, numeric)) {
+        return false;
+    }
+
+    value = static_cast<int>(numeric);
+    return true;
+}
+
+bool readDoubleArray(
+    const std::string& text,
+    const std::string& key,
+    std::vector<double>& values
+) {
+    const std::string quotedKey = "\"" + key + "\"";
+    const std::size_t keyPosition = text.find(quotedKey);
+    if (keyPosition == std::string::npos) {
+        return false;
+    }
+
+    const std::size_t arrayStart = text.find('[', keyPosition + quotedKey.size());
+    if (arrayStart == std::string::npos) {
+        return false;
+    }
+
+    const std::size_t arrayEnd = text.find(']', arrayStart + 1);
+    if (arrayEnd == std::string::npos) {
+        return false;
+    }
+
+    values.clear();
+    const std::string arrayText =
+        text.substr(arrayStart + 1, arrayEnd - arrayStart - 1);
+    const std::regex numberPattern(
+        "-?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?"
+    );
+    for (std::sregex_iterator it(
+             arrayText.begin(),
+             arrayText.end(),
+             numberPattern
+         );
+         it != std::sregex_iterator{};
+         ++it) {
+        values.push_back(std::stod((*it)[0].str()));
+    }
+
+    return true;
+}
+
 } // namespace
 
 AdaptiveClimateController::AdaptiveClimateController(const ClimateControlSpec& spec)
@@ -236,6 +323,82 @@ void AdaptiveClimateController::learn(
 
 double AdaptiveClimateController::lastReward() const {
     return lastReward_;
+}
+
+bool AdaptiveClimateController::loadPolicy(const std::string& path) {
+    std::ifstream input(path);
+    if (!input) {
+        std::cout << "[ML] No existing policy found, starting fresh\n";
+        return false;
+    }
+
+    const std::string text{
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+
+    int version = 0;
+    int actionCount = 0;
+    std::vector<double> values;
+    if (!readIntField(text, "version", version)
+        || version != 1
+        || !readIntField(text, "action_count", actionCount)
+        || actionCount != static_cast<int>(actionValues_.size())
+        || !readDoubleArray(text, "action_values", values)
+        || values.size() != actionValues_.size()) {
+        std::cout << "[ML] Invalid policy file, starting fresh\n";
+        std::fill(actionValues_.begin(), actionValues_.end(), 0.0);
+        actionValues_[13] = 1e-6;
+        lastReward_ = 0.0;
+        return false;
+    }
+
+    double lastReward = 0.0;
+    readDoubleField(text, "last_reward", lastReward);
+    actionValues_ = values;
+    lastReward_ = lastReward;
+    std::cout << "[ML] Loaded policy from " << path << "\n";
+    return true;
+}
+
+bool AdaptiveClimateController::savePolicy(const std::string& path) const {
+    const std::filesystem::path policyPath(path);
+    const std::filesystem::path parent = policyPath.parent_path();
+    if (!parent.empty()) {
+        std::filesystem::create_directories(parent);
+    }
+
+    std::ofstream output(path);
+    if (!output) {
+        std::cout << "[ML] Could not save policy to " << path << "\n";
+        return false;
+    }
+
+    output << std::setprecision(12);
+    output << "{\n";
+    output << "  \"version\": 1,\n";
+    output << "  \"action_count\": " << actionValues_.size() << ",\n";
+    output << "  \"action_values\": [\n";
+    for (std::size_t i = 0; i < actionValues_.size(); ++i) {
+        output << "    " << actionValues_[i];
+        if (i + 1 < actionValues_.size()) {
+            output << ",";
+        }
+        output << "\n";
+    }
+    output << "  ],\n";
+    output << "  \"last_reward\": " << lastReward_ << ",\n";
+    output << "  \"metadata\": {\n";
+    output << "    \"description\": "
+           << "\"Persistent ML policy for greenhouse adaptive controller\",\n";
+    output << "    \"saved_at\": \"" << currentTimestamp() << "\",\n";
+    output << "    \"learning_rate\": " << spec_.learningRate << ",\n";
+    output << "    \"exploration_rate\": " << spec_.explorationRate << "\n";
+    output << "  }\n";
+    output << "}\n";
+
+    std::cout << "[ML] Saved policy to " << path << "\n";
+    return true;
 }
 
 } // namespace greenhouse

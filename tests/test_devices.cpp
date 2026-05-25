@@ -28,8 +28,14 @@ int main() {
     assert(mapped.humidifiers.size() == 1);
     assert(mapped.totalHeaterPowerW == 1200.0);
     assert(mapped.averageVentOpening == 0.5);
+    assert(mapped.plants.front().sensorLinearIndex != mapped.plants.front().linearIndex);
     assert(greenhouse::humidifierModeMultiplier("off") == 0.0);
     assert(greenhouse::humidifierModeMultiplier("medium") == 1.0);
+
+    greenhouse::MappedDeviceSet runtime = mapped;
+    runtime.heaters.front().spec.failed = true;
+    greenhouse::refreshDeviceRuntimeTotals(runtime);
+    assert(runtime.totalHeaterPowerW == 0.0);
 
     bool failed = false;
     try {

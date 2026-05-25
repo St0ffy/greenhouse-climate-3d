@@ -26,6 +26,7 @@ struct SimulationConfig {
     std::vector<PlantPoint> plants;
     OutputSpec output;
     OptimizerSpec optimizer;
+    ClimateControlSpec control;
 };
 
 SimulationConfig loadConfig(const std::string& path);

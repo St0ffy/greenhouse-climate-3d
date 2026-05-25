@@ -64,7 +64,7 @@ void writeCellHistoryCsv(
     const std::filesystem::path& path
 ) {
     std::ofstream file = openOutputFile(path);
-    file << "time_seconds,linear_index,x,y,z,temperature_c,humidity_percent\n";
+    file << "time_seconds,linear_index,x,y,z,temperature_c,humidity_percent,light_w_m2\n";
 
     for (const SimulationFrame& frame : result.frames) {
         for (std::size_t linear = 0; linear < frame.cells.size(); ++linear) {
@@ -76,7 +76,8 @@ void writeCellHistoryCsv(
                  << index.y << ','
                  << index.z << ','
                  << cell.temperatureC << ','
-                 << cell.humidityPercent << '\n';
+                 << cell.humidityPercent << ','
+                 << cell.lightWm2 << '\n';
         }
     }
 }
@@ -93,7 +94,9 @@ void writeMetricsCsv(
         << "avg_humidity_percent,min_humidity_percent,max_humidity_percent,"
         << "plant_avg_temperature_c,plant_target_temperature_c,plant_avg_temperature_error_c,"
         << "plant_avg_humidity_percent,"
-        << "cumulative_heater_energy_kwh,"
+        << "plant_avg_health,plant_min_health,plant_avg_growth,plant_avg_comfort,plant_alive_count,"
+        << "controller_reward,active_heater_power_w,active_humidifier_count,failed_device_count,"
+        << "cumulative_heater_energy_kwh,cumulative_device_energy_kwh,"
         << "avg_vent_temperature_delta_c,avg_vent_humidity_delta_percent\n";
 
     for (const SimulationFrame& frame : result.frames) {
@@ -111,7 +114,17 @@ void writeMetricsCsv(
              << frame.plantTemperature.averageTargetTemperatureC << ','
              << frame.plantTemperature.averageAbsoluteErrorC << ','
              << frame.plantHumidity.averageHumidityPercent << ','
+             << frame.plantGrowth.averageHealth << ','
+             << frame.plantGrowth.minHealth << ','
+             << frame.plantGrowth.averageGrowth << ','
+             << frame.plantGrowth.averageComfort << ','
+             << frame.plantGrowth.aliveCount << ','
+             << frame.control.reward << ','
+             << frame.control.activeHeaterPowerW << ','
+             << frame.control.activeHumidifierCount << ','
+             << frame.control.failedDeviceCount << ','
              << frame.cumulativeHeaterEnergyKWh << ','
+             << frame.cumulativeDeviceEnergyKWh << ','
              << frame.climate.averageVentTemperatureDeltaC << ','
              << frame.climate.averageVentHumidityDeltaPercent << '\n';
     }
@@ -142,7 +155,8 @@ void writeSummaryJson(
     file << "    \"heat_loss_coefficient\": " << result.material.heatLossCoefficient << ",\n";
     file << "    \"solar_transmission\": " << result.material.solarTransmission << "\n";
     file << "  },\n";
-    file << "  \"total_heater_energy_kwh\": " << result.totalHeaterEnergyKWh;
+    file << "  \"total_heater_energy_kwh\": " << result.totalHeaterEnergyKWh << ",\n";
+    file << "  \"total_device_energy_kwh\": " << result.totalDeviceEnergyKWh;
 
     if (finalFrame != nullptr) {
         file << ",\n";
@@ -161,7 +175,17 @@ void writeSummaryJson(
         file << "    \"plant_average_temperature_error_c\": "
              << finalFrame->plantTemperature.averageAbsoluteErrorC << ",\n";
         file << "    \"plant_average_humidity_percent\": "
-             << finalFrame->plantHumidity.averageHumidityPercent << "\n";
+             << finalFrame->plantHumidity.averageHumidityPercent << ",\n";
+        file << "    \"plant_average_health\": "
+             << finalFrame->plantGrowth.averageHealth << ",\n";
+        file << "    \"plant_average_growth\": "
+             << finalFrame->plantGrowth.averageGrowth << ",\n";
+        file << "    \"plant_alive_count\": "
+             << finalFrame->plantGrowth.aliveCount << ",\n";
+        file << "    \"controller_reward\": "
+             << finalFrame->control.reward << ",\n";
+        file << "    \"failed_device_count\": "
+             << finalFrame->control.failedDeviceCount << "\n";
         file << "  }\n";
     } else {
         file << "\n";

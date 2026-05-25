@@ -79,6 +79,9 @@ struct ClimateStepSummary {
     double averageHumidifierGainPercent = 0.0;
     double averageVentTemperatureDeltaC = 0.0;
     double averageVentHumidityDeltaPercent = 0.0;
+    double humidifierEnergyKWh = 0.0;
+    double ventEnergyKWh = 0.0;
+    double totalDeviceEnergyKWh = 0.0;
 };
 
 struct ClimateStepResult {
@@ -94,6 +97,13 @@ std::vector<CellState> makeInitialCells(
 
 TemperatureStats summarizeTemperature(const std::vector<CellState>& cells);
 HumidityStats summarizeHumidity(const std::vector<CellState>& cells);
+
+double estimateCellLightWm2(
+    const Grid3D& grid,
+    const GridIndex& index,
+    const WeatherCondition& weather,
+    const MaterialProperties& material
+);
 
 PlantTemperatureStats summarizePlantTemperatures(
     const std::vector<CellState>& cells,

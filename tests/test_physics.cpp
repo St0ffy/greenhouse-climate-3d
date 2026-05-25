@@ -100,6 +100,40 @@ int main() {
     }
 
     {
+        const greenhouse::Grid3D grid({1.0, 1.0, 1.0}, {1, 1, 1});
+        const std::vector<greenhouse::PlantPoint> plants = {
+            {"plant", {0.5, 0.5, 0.5}, 22.0}
+        };
+        const std::vector<greenhouse::HeaterSpec> heaters = {
+            {"failed_heater", {0.5, 0.5, 0.5}, 1000.0, 0.0, true, true, 1000.0}
+        };
+        const greenhouse::MappedDeviceSet devices =
+            greenhouse::mapDeviceSetToGrid(plants, {}, heaters, {}, grid);
+        const std::vector<greenhouse::CellState> cells =
+            greenhouse::makeInitialCells(grid, 20.0, 60.0);
+
+        greenhouse::TemperaturePhysicsSettings settings;
+        settings.heatTransferRatePerSecond = 0.0;
+        settings.boundaryHeatLossRatePerSecond = 0.0;
+        settings.solarGainCPerWm2Second = 0.0;
+        settings.heaterGainCPerWattSecond = 0.001;
+
+        const greenhouse::TemperatureStepResult result =
+            greenhouse::advanceTemperature(
+                cells,
+                grid,
+                noSun,
+                noLoss,
+                devices,
+                10.0,
+                settings
+            );
+
+        assert(almostEqual(result.cells.front().temperatureC, 20.0));
+        assert(almostEqual(result.summary.heaterEnergyKWh, 0.0));
+    }
+
+    {
         const greenhouse::Grid3D grid({1.0, 1.0, 2.0}, {1, 1, 2});
         const greenhouse::MappedDeviceSet devices = emptyDevicesFor(grid);
         const std::vector<greenhouse::CellState> cells =

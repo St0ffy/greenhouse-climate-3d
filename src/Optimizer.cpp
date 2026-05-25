@@ -150,9 +150,11 @@ OptimizationScore scoreSimulation(
     const double averageError = finalFrame.plantTemperature.averageAbsoluteErrorC;
     const double maxError = finalFrame.plantTemperature.maxAbsoluteErrorC;
     const double energy = simulation.totalHeaterEnergyKWh;
+    const double healthPenalty =
+        std::max(0.0, 1.0 - finalFrame.plantGrowth.averageHealth) * 5.0;
 
     return {
-        averageError + 0.25 * maxError + energyWeight * energy,
+        averageError + 0.25 * maxError + healthPenalty + energyWeight * energy,
         averageError,
         maxError,
         energy

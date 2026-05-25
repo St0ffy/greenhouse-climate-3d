@@ -38,11 +38,20 @@ int main() {
     assert(config.heaters.size() == 2);
     assert(config.humidifiers.size() == 1);
     assert(config.plants.size() == 3);
+    assert(almostEqual(config.plants[0].targetHumidityPercent, 62.0));
+    assert(almostEqual(config.plants[0].targetLightWm2, 300.0));
+    assert(almostEqual(config.plants[0].sensorHeightM, 0.4));
+    assert(almostEqual(config.heaters[0].maxPowerW, 1800.0));
+    assert(config.heaters[0].enabled);
+    assert(!config.heaters[0].failed);
+    assert(config.humidifiers[0].enabled);
+    assert(almostEqual(config.humidifiers[0].level, 1.0));
     assert(config.output.directory == "outputs");
     assert(config.output.writeCsv);
     assert(config.output.writeJson);
     assert(config.output.writeReport);
     assert(config.output.terminalView.enabled);
+    assert(config.output.terminalView.interactive);
     assert(config.output.terminalView.field == "temperature");
     assert(config.output.terminalView.layerZ == 0);
     assert(config.output.terminalView.displayStrideX == 1);
@@ -62,6 +71,11 @@ int main() {
     assert(config.optimizer.maxCandidates == 30);
     assert(config.optimizer.maxLayouts == 500);
     assert(almostEqual(config.optimizer.energyWeight, 0.05));
+    assert(config.control.enabled);
+    assert(config.control.mlEnabled);
+    assert(almostEqual(config.control.energyWeight, 0.08));
+    assert(almostEqual(config.control.learningRate, 0.25));
+    assert(almostEqual(config.control.explorationRate, 0.10));
 
     return 0;
 }

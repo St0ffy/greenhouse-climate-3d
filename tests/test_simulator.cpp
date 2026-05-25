@@ -22,6 +22,8 @@ int main() {
     config.heaters = {{"heater", {0.5, 0.5, 0.5}, 500.0, 1.0}};
     config.vents = {{"vent", {1.5, 1.5, 0.5}, 0.2, 1.0}};
     config.humidifiers = {{"humidifier", {0.5, 0.5, 0.5}, "medium", 1.0}};
+    config.control.enabled = true;
+    config.control.mlEnabled = false;
 
     const greenhouse::Grid3D grid(config.greenhouseSize, config.gridSize);
     const greenhouse::MappedDeviceSet devices =
@@ -46,6 +48,10 @@ int main() {
     assert(result.frames.back().plantTemperature.averageAbsoluteErrorC >= 0.0);
     assert(result.frames.back().plantHumidity.averageHumidityPercent >= 0.0);
     assert(result.frames.back().plantHumidity.averageHumidityPercent <= 100.0);
+    assert(!result.frames.back().sensorReadings.empty());
+    assert(result.frames.back().plantGrowth.averageHealth > 0.0);
+    assert(result.frames.back().control.enabled);
+    assert(result.totalDeviceEnergyKWh >= result.totalHeaterEnergyKWh);
 
     return 0;
 }

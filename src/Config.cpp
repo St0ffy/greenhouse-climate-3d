@@ -158,7 +158,10 @@ std::vector<VentSpec> readVents(const std::string& text) {
             readString(object, "name", "vent"),
             readVec3(object, "position", {0.0, 0.0, 0.0}),
             readNumber(object, "opening", 0.0),
-            readNumber(object, "influence_radius_m", 1.0)
+            readNumber(object, "influence_radius_m", 1.0),
+            readBool(object, "enabled", true),
+            readBool(object, "failed", false),
+            readNumber(object, "power_w", 20.0)
         });
     }
     return vents;
@@ -171,7 +174,14 @@ std::vector<HeaterSpec> readHeaters(const std::string& text) {
             readString(object, "name", "heater"),
             readVec3(object, "position", {0.0, 0.0, 0.0}),
             readNumber(object, "power_w", 1000.0),
-            readNumber(object, "influence_radius_m", 1.0)
+            readNumber(object, "influence_radius_m", 1.0),
+            readBool(object, "enabled", true),
+            readBool(object, "failed", false),
+            readNumber(
+                object,
+                "max_power_w",
+                readNumber(object, "power_w", 1000.0)
+            )
         });
     }
     return heaters;
@@ -184,7 +194,11 @@ std::vector<HumidifierSpec> readHumidifiers(const std::string& text) {
             readString(object, "name", "humidifier"),
             readVec3(object, "position", {0.0, 0.0, 0.0}),
             readString(object, "mode", "off"),
-            readNumber(object, "influence_radius_m", 1.0)
+            readNumber(object, "influence_radius_m", 1.0),
+            readBool(object, "enabled", true),
+            readBool(object, "failed", false),
+            readNumber(object, "level", 1.0),
+            readNumber(object, "power_w", 150.0)
         });
     }
     return humidifiers;
@@ -196,7 +210,18 @@ std::vector<PlantPoint> readPlants(const std::string& text) {
         plants.push_back({
             readString(object, "name", "plant"),
             readVec3(object, "position", {0.0, 0.0, 0.0}),
-            readNumber(object, "target_temperature_c", 22.0)
+            readNumber(object, "target_temperature_c", 22.0),
+            readNumber(object, "target_humidity_percent", 60.0),
+            readNumber(object, "target_light_w_m2", 350.0),
+            readNumber(object, "min_survival_temperature_c", 5.0),
+            readNumber(object, "max_survival_temperature_c", 38.0),
+            readNumber(object, "min_survival_humidity_percent", 25.0),
+            readNumber(object, "max_survival_humidity_percent", 95.0),
+            readNumber(object, "min_survival_light_w_m2", 0.0),
+            readNumber(object, "max_survival_light_w_m2", 1200.0),
+            readNumber(object, "initial_health", 1.0),
+            readNumber(object, "initial_growth", 0.0),
+            readNumber(object, "sensor_height_m", 0.4)
         });
     }
     return plants;
@@ -217,6 +242,7 @@ SimulationConfig loadConfig(const std::string& path) {
     const std::string terminalViewSection =
         readObject(outputSection, "terminal_view");
     const std::string optimizerSection = readObject(text, "optimizer");
+    const std::string controlSection = readObject(text, "controller");
     SimulationConfig config;
 
     config.mode = readString(runSection, "mode", "simulate");
@@ -254,6 +280,7 @@ SimulationConfig loadConfig(const std::string& path) {
         readBool(outputSection, "write_report", true),
         {
             readBool(terminalViewSection, "enabled", false),
+            readBool(terminalViewSection, "interactive", false),
             readString(terminalViewSection, "field", "temperature"),
             readInt(terminalViewSection, "layer_z", 0),
             readInt(terminalViewSection, "display_stride_x", 1),
@@ -280,6 +307,15 @@ SimulationConfig loadConfig(const std::string& path) {
         readInt(optimizerSection, "max_candidates", 30),
         readInt(optimizerSection, "max_layouts", 500),
         readNumber(optimizerSection, "energy_weight", 0.05)
+    };
+    config.control = {
+        readBool(controlSection, "enabled", false),
+        readBool(controlSection, "ml_enabled", false),
+        readNumber(controlSection, "energy_weight", 0.08),
+        readNumber(controlSection, "learning_rate", 0.25),
+        readNumber(controlSection, "exploration_rate", 0.10),
+        readNumber(controlSection, "comfort_weight", 1.0),
+        readNumber(controlSection, "max_heater_level_change", 0.25)
     };
     config.heaterPowerW = readNumber(text, "power_w", 1200.0);
     config.plants = {

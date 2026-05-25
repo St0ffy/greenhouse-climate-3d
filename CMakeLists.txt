@@ -15,6 +15,8 @@ add_library(greenhouse_core
     src/Weather.cpp
     src/Material.cpp
     src/Devices.cpp
+    src/Plant.cpp
+    src/Controller.cpp
     src/Physics.cpp
     src/Simulator.cpp
     src/Optimizer.cpp
@@ -75,6 +77,22 @@ target_link_libraries(test_devices PRIVATE greenhouse_core)
 
 add_test(NAME devices COMMAND test_devices)
 
+add_executable(test_plants
+    tests/test_plants.cpp
+)
+
+target_link_libraries(test_plants PRIVATE greenhouse_core)
+
+add_test(NAME plants COMMAND test_plants)
+
+add_executable(test_controller
+    tests/test_controller.cpp
+)
+
+target_link_libraries(test_controller PRIVATE greenhouse_core)
+
+add_test(NAME controller COMMAND test_controller)
+
 add_executable(test_physics
     tests/test_physics.cpp
 )
@@ -113,6 +131,8 @@ set_tests_properties(
     weather
     material
     devices
+    plants
+    controller
     physics
     simulator
     export_report

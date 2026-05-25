@@ -58,7 +58,9 @@ std::string normalizedMode(const std::string& mode) {
 double totalPower(const std::vector<MappedHeater>& heaters) {
     double total = 0.0;
     for (const MappedHeater& heater : heaters) {
-        total += heater.spec.powerW;
+        if (heater.spec.enabled && !heater.spec.failed) {
+            total += heater.spec.powerW;
+        }
     }
     return total;
 }
@@ -70,9 +72,21 @@ double averageOpening(const std::vector<MappedVent>& vents) {
 
     double total = 0.0;
     for (const MappedVent& vent : vents) {
-        total += vent.spec.opening;
+        if (vent.spec.enabled && !vent.spec.failed) {
+            total += vent.spec.opening;
+        }
     }
     return total / static_cast<double>(vents.size());
+}
+
+Vec3 sensorPositionForPlant(const PlantPoint& plant, const Grid3D& grid) {
+    Vec3 sensor = plant.position;
+    sensor.z = std::clamp(
+        plant.position.z + std::max(0.0, plant.sensorHeightM),
+        0.0,
+        grid.greenhouseSize().height
+    );
+    return sensor;
 }
 
 } // namespace
@@ -117,6 +131,21 @@ void validateDeviceSpecs(
         if (plant.targetTemperatureC < -50.0 || plant.targetTemperatureC > 80.0) {
             throw std::invalid_argument("plant target temperature is outside a reasonable range");
         }
+        if (plant.targetHumidityPercent < 0.0 || plant.targetHumidityPercent > 100.0) {
+            throw std::invalid_argument("plant target humidity must be in range 0..100: " + plant.name);
+        }
+        if (plant.minSurvivalTemperatureC > plant.maxSurvivalTemperatureC) {
+            throw std::invalid_argument("plant survival temperature range is invalid: " + plant.name);
+        }
+        if (plant.minSurvivalHumidityPercent > plant.maxSurvivalHumidityPercent) {
+            throw std::invalid_argument("plant survival humidity range is invalid: " + plant.name);
+        }
+        if (plant.initialHealth < 0.0 || plant.initialHealth > 1.0) {
+            throw std::invalid_argument("plant initial health must be in range 0..1: " + plant.name);
+        }
+        if (plant.initialGrowth < 0.0) {
+            throw std::invalid_argument("plant initial growth cannot be negative: " + plant.name);
+        }
     }
 
     for (const VentSpec& vent : vents) {
@@ -132,6 +161,9 @@ void validateDeviceSpecs(
         if (heater.powerW < 0.0) {
             throw std::invalid_argument("heater power cannot be negative: " + heater.name);
         }
+        if (heater.maxPowerW < 0.0) {
+            throw std::invalid_argument("heater max power cannot be negative: " + heater.name);
+        }
         if (heater.influenceRadiusM < 0.0) {
             throw std::invalid_argument("heater influence radius cannot be negative: " + heater.name);
         }
@@ -140,6 +172,12 @@ void validateDeviceSpecs(
     for (const HumidifierSpec& humidifier : humidifiers) {
         if (!isValidHumidifierMode(humidifier.mode)) {
             throw std::invalid_argument("humidifier mode must be off, low, medium, or high: " + humidifier.name);
+        }
+        if (humidifier.level < 0.0 || humidifier.level > 1.0) {
+            throw std::invalid_argument("humidifier level must be in range 0..1: " + humidifier.name);
+        }
+        if (humidifier.powerW < 0.0) {
+            throw std::invalid_argument("humidifier power cannot be negative: " + humidifier.name);
         }
         if (humidifier.influenceRadiusM < 0.0) {
             throw std::invalid_argument("humidifier influence radius cannot be negative: " + humidifier.name);
@@ -157,12 +195,19 @@ std::vector<MappedPlantPoint> mapPlantsToGrid(
     for (const PlantPoint& plant : plants) {
         const GridIndex cell = grid.cellAt(plant.position);
         const Vec3 center = grid.cellCenter(cell);
+        const Vec3 sensorPosition = sensorPositionForPlant(plant, grid);
+        const GridIndex sensorCell = grid.cellAt(sensorPosition);
+        const Vec3 sensorCellCenter = grid.cellCenter(sensorCell);
         result.push_back({
             plant,
             cell,
             grid.linearIndex(cell),
             center,
-            distanceMeters(plant.position, center)
+            distanceMeters(plant.position, center),
+            sensorCell,
+            grid.linearIndex(sensorCell),
+            sensorPosition,
+            sensorCellCenter
         });
     }
 
@@ -177,9 +222,14 @@ std::vector<MappedVent> mapVentsToGrid(
     result.reserve(vents.size());
 
     for (const VentSpec& vent : vents) {
+        VentSpec mappedSpec = vent;
+        mappedSpec.opening = std::clamp(mappedSpec.opening, 0.0, 1.0);
+        if (!mappedSpec.enabled || mappedSpec.failed) {
+            mappedSpec.opening = 0.0;
+        }
         const GridIndex anchorCell = grid.cellAt(vent.position);
         result.push_back({
-            vent,
+            mappedSpec,
             anchorCell,
             grid.linearIndex(anchorCell),
             buildInfluenceCells(grid, vent.position, vent.influenceRadiusM)
@@ -197,9 +247,16 @@ std::vector<MappedHeater> mapHeatersToGrid(
     result.reserve(heaters.size());
 
     for (const HeaterSpec& heater : heaters) {
+        HeaterSpec mappedSpec = heater;
+        if (mappedSpec.maxPowerW <= 0.0) {
+            mappedSpec.maxPowerW = mappedSpec.powerW;
+        }
+        if (!mappedSpec.enabled || mappedSpec.failed) {
+            mappedSpec.powerW = 0.0;
+        }
         const GridIndex anchorCell = grid.cellAt(heater.position);
         result.push_back({
-            heater,
+            mappedSpec,
             anchorCell,
             grid.linearIndex(anchorCell),
             buildInfluenceCells(grid, heater.position, heater.influenceRadiusM)
@@ -217,9 +274,15 @@ std::vector<MappedHumidifier> mapHumidifiersToGrid(
     result.reserve(humidifiers.size());
 
     for (const HumidifierSpec& humidifier : humidifiers) {
+        HumidifierSpec mappedSpec = humidifier;
+        mappedSpec.level = std::clamp(mappedSpec.level, 0.0, 1.0);
+        if (!mappedSpec.enabled || mappedSpec.failed) {
+            mappedSpec.mode = "off";
+            mappedSpec.level = 0.0;
+        }
         const GridIndex anchorCell = grid.cellAt(humidifier.position);
         result.push_back({
-            humidifier,
+            mappedSpec,
             anchorCell,
             grid.linearIndex(anchorCell),
             buildInfluenceCells(grid, humidifier.position, humidifier.influenceRadiusM)
@@ -246,6 +309,46 @@ MappedDeviceSet mapDeviceSetToGrid(
     result.totalHeaterPowerW = totalPower(result.heaters);
     result.averageVentOpening = averageOpening(result.vents);
     return result;
+}
+
+double effectiveHeaterMaxPowerW(const HeaterSpec& heater) {
+    return heater.maxPowerW > 0.0 ? heater.maxPowerW : heater.powerW;
+}
+
+void refreshDeviceRuntimeTotals(MappedDeviceSet& devices) {
+    for (MappedHeater& heater : devices.heaters) {
+        if (heater.spec.maxPowerW <= 0.0) {
+            heater.spec.maxPowerW = heater.spec.powerW;
+        }
+        if (!heater.spec.enabled || heater.spec.failed) {
+            heater.spec.powerW = 0.0;
+        } else {
+            heater.spec.powerW = std::clamp(
+                heater.spec.powerW,
+                0.0,
+                effectiveHeaterMaxPowerW(heater.spec)
+            );
+        }
+    }
+
+    for (MappedVent& vent : devices.vents) {
+        if (!vent.spec.enabled || vent.spec.failed) {
+            vent.spec.opening = 0.0;
+        } else {
+            vent.spec.opening = std::clamp(vent.spec.opening, 0.0, 1.0);
+        }
+    }
+
+    for (MappedHumidifier& humidifier : devices.humidifiers) {
+        humidifier.spec.level = std::clamp(humidifier.spec.level, 0.0, 1.0);
+        if (!humidifier.spec.enabled || humidifier.spec.failed) {
+            humidifier.spec.mode = "off";
+            humidifier.spec.level = 0.0;
+        }
+    }
+
+    devices.totalHeaterPowerW = totalPower(devices.heaters);
+    devices.averageVentOpening = averageOpening(devices.vents);
 }
 
 } // namespace greenhouse

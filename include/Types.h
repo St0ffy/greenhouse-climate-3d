@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -53,12 +54,24 @@ struct MaterialSpec {
 struct CellState {
     double temperatureC = 20.0;
     double humidityPercent = 60.0;
+    double lightWm2 = 0.0;
 };
 
 struct PlantPoint {
     std::string name;
     Vec3 position;
     double targetTemperatureC = 22.0;
+    double targetHumidityPercent = 60.0;
+    double targetLightWm2 = 350.0;
+    double minSurvivalTemperatureC = 5.0;
+    double maxSurvivalTemperatureC = 38.0;
+    double minSurvivalHumidityPercent = 25.0;
+    double maxSurvivalHumidityPercent = 95.0;
+    double minSurvivalLightWm2 = 0.0;
+    double maxSurvivalLightWm2 = 1200.0;
+    double initialHealth = 1.0;
+    double initialGrowth = 0.0;
+    double sensorHeightM = 0.4;
 };
 
 struct VentSpec {
@@ -66,6 +79,9 @@ struct VentSpec {
     Vec3 position;
     double opening = 0.0;
     double influenceRadiusM = 1.0;
+    bool enabled = true;
+    bool failed = false;
+    double powerW = 20.0;
 };
 
 struct HeaterSpec {
@@ -73,6 +89,9 @@ struct HeaterSpec {
     Vec3 position;
     double powerW = 1000.0;
     double influenceRadiusM = 1.0;
+    bool enabled = true;
+    bool failed = false;
+    double maxPowerW = 0.0;
 };
 
 struct HumidifierSpec {
@@ -80,10 +99,15 @@ struct HumidifierSpec {
     Vec3 position;
     std::string mode = "off";
     double influenceRadiusM = 1.0;
+    bool enabled = true;
+    bool failed = false;
+    double level = 1.0;
+    double powerW = 150.0;
 };
 
 struct TerminalViewSpec {
     bool enabled = false;
+    bool interactive = false;
     std::string field = "temperature";
     int layerZ = 0;
     int displayStrideX = 1;
@@ -114,6 +138,53 @@ struct OptimizerSpec {
     int maxCandidates = 30;
     int maxLayouts = 500;
     double energyWeight = 0.05;
+};
+
+struct ClimateControlSpec {
+    bool enabled = false;
+    bool mlEnabled = false;
+    double energyWeight = 0.08;
+    double learningRate = 0.25;
+    double explorationRate = 0.10;
+    double comfortWeight = 1.0;
+    double maxHeaterLevelChange = 0.25;
+};
+
+struct PlantSensorReading {
+    std::string plantName;
+    GridIndex plantCell;
+    GridIndex sensorCell;
+    std::size_t sensorLinearIndex = 0;
+    double temperatureC = 0.0;
+    double humidityPercent = 0.0;
+    double lightWm2 = 0.0;
+};
+
+struct PlantState {
+    std::string name;
+    double health = 1.0;
+    double growth = 0.0;
+    double ageSeconds = 0.0;
+    double comfort = 0.0;
+    bool alive = true;
+};
+
+struct PlantGrowthStats {
+    double averageHealth = 0.0;
+    double minHealth = 0.0;
+    double averageGrowth = 0.0;
+    double averageComfort = 0.0;
+    int aliveCount = 0;
+};
+
+struct ControlStepSummary {
+    bool enabled = false;
+    bool mlEnabled = false;
+    double reward = 0.0;
+    double activeHeaterPowerW = 0.0;
+    double averageVentOpening = 0.0;
+    int activeHumidifierCount = 0;
+    int failedDeviceCount = 0;
 };
 
 } // namespace greenhouse

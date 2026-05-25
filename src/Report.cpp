@@ -56,6 +56,9 @@ std::string buildSimulationReport(
            << devices.plants.size() << " plant points\n";
     report << "Total heater power, W: " << devices.totalHeaterPowerW << "\n";
     report << "Total heater energy, kWh: " << result.totalHeaterEnergyKWh << "\n";
+    report << "Total device energy, kWh: " << result.totalDeviceEnergyKWh << "\n";
+    report << "Controller enabled: " << formatBool(result.config.control.enabled)
+           << ", ML enabled: " << formatBool(result.config.control.mlEnabled) << "\n";
 
     if (!result.frames.empty()) {
         const SimulationFrame& initial = result.frames.front();
@@ -69,6 +72,8 @@ std::string buildSimulationReport(
                << initial.climate.humidity.averageHumidityPercent << "\n";
         report << "Plant average temperature, C: "
                << initial.plantTemperature.averageTemperatureC << "\n";
+        report << "Plant average health: "
+               << initial.plantGrowth.averageHealth << "\n";
 
         report << "\nFinal climate\n";
         report << "-------------\n";
@@ -94,6 +99,20 @@ std::string buildSimulationReport(
                << final.plantTemperature.maxAbsoluteErrorC << "\n";
         report << "Plant average humidity, %: "
                << final.plantHumidity.averageHumidityPercent << "\n";
+        report << "Plant average health: "
+               << final.plantGrowth.averageHealth << "\n";
+        report << "Plant min health: "
+               << final.plantGrowth.minHealth << "\n";
+        report << "Plant average growth: "
+               << final.plantGrowth.averageGrowth << "\n";
+        report << "Plant average comfort: "
+               << final.plantGrowth.averageComfort << "\n";
+        report << "Plant alive count: "
+               << final.plantGrowth.aliveCount << "\n";
+        report << "Controller reward: "
+               << final.control.reward << "\n";
+        report << "Failed devices: "
+               << final.control.failedDeviceCount << "\n";
 
         report << "\nInterpretation\n";
         report << "--------------\n";

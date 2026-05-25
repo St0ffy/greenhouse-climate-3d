@@ -23,6 +23,10 @@ struct MappedPlantPoint {
     std::size_t linearIndex = 0;
     Vec3 cellCenter;
     double distanceToCenterM = 0.0;
+    GridIndex sensorCell;
+    std::size_t sensorLinearIndex = 0;
+    Vec3 sensorPosition;
+    Vec3 sensorCellCenter;
 };
 
 struct MappedVent {
@@ -92,5 +96,8 @@ MappedDeviceSet mapDeviceSetToGrid(
     const std::vector<HumidifierSpec>& humidifiers,
     const Grid3D& grid
 );
+
+double effectiveHeaterMaxPowerW(const HeaterSpec& heater);
+void refreshDeviceRuntimeTotals(MappedDeviceSet& devices);
 
 } // namespace greenhouse

@@ -32,6 +32,21 @@ struct ValueRange {
     double maxValue = 1.0;
 };
 
+enum class TerminalKey {
+    None,
+    Escape,
+    Up,
+    Down,
+    Left,
+    Right,
+    Enter,
+    ToggleFailure,
+    CycleField,
+    LayerDown,
+    LayerUp,
+    Pause
+};
+
 class TerminalInput {
 public:
     TerminalInput() {
@@ -64,21 +79,39 @@ public:
         return interactive_;
     }
 
-    bool escapePressed() {
+    TerminalKey pollKey() {
         if (!interactive_) {
-            return false;
+            return TerminalKey::None;
         }
 
 #ifdef _WIN32
-        while (_kbhit() != 0) {
-            if (_getch() == 27) {
-                return true;
+        if (_kbhit() == 0) {
+            return TerminalKey::None;
+        }
+
+        const int ch = _getch();
+        if (ch == 0 || ch == 224) {
+            if (_kbhit() == 0) {
+                return TerminalKey::None;
+            }
+            switch (_getch()) {
+                case 72:
+                    return TerminalKey::Up;
+                case 80:
+                    return TerminalKey::Down;
+                case 75:
+                    return TerminalKey::Left;
+                case 77:
+                    return TerminalKey::Right;
+                default:
+                    return TerminalKey::None;
             }
         }
-        return false;
+
+        return keyFromChar(static_cast<char>(ch));
 #else
         if (!active_) {
-            return false;
+            return TerminalKey::None;
         }
 
         fd_set readSet;
@@ -87,21 +120,82 @@ public:
         FD_SET(STDIN_FILENO, &readSet);
 
         if (select(STDIN_FILENO + 1, &readSet, nullptr, nullptr, &timeout) <= 0) {
-            return false;
+            return TerminalKey::None;
         }
 
         char ch = '\0';
-        while (read(STDIN_FILENO, &ch, 1) == 1) {
-            if (ch == 27) {
-                return true;
-            }
+        if (read(STDIN_FILENO, &ch, 1) != 1) {
+            return TerminalKey::None;
         }
 
-        return false;
+        if (ch == 27) {
+            char seq[2] = {'\0', '\0'};
+            if (read(STDIN_FILENO, &seq[0], 1) == 1
+                && read(STDIN_FILENO, &seq[1], 1) == 1
+                && seq[0] == '[') {
+                switch (seq[1]) {
+                    case 'A':
+                        return TerminalKey::Up;
+                    case 'B':
+                        return TerminalKey::Down;
+                    case 'C':
+                        return TerminalKey::Right;
+                    case 'D':
+                        return TerminalKey::Left;
+                    default:
+                        return TerminalKey::None;
+                }
+            }
+            return TerminalKey::Escape;
+        }
+
+        return keyFromChar(ch);
 #endif
     }
 
+    bool escapePressed() {
+        return pollKey() == TerminalKey::Escape;
+    }
+
 private:
+    static TerminalKey keyFromChar(char ch) {
+        switch (ch) {
+            case 27:
+                return TerminalKey::Escape;
+            case '\n':
+            case '\r':
+                return TerminalKey::Enter;
+            case 'w':
+            case 'W':
+                return TerminalKey::Up;
+            case 's':
+            case 'S':
+                return TerminalKey::Down;
+            case 'a':
+            case 'A':
+                return TerminalKey::Left;
+            case 'd':
+            case 'D':
+                return TerminalKey::Right;
+            case 'f':
+            case 'F':
+                return TerminalKey::ToggleFailure;
+            case 't':
+            case 'T':
+                return TerminalKey::CycleField;
+            case 'z':
+            case 'Z':
+                return TerminalKey::LayerDown;
+            case 'x':
+            case 'X':
+                return TerminalKey::LayerUp;
+            case ' ':
+                return TerminalKey::Pause;
+            default:
+                return TerminalKey::None;
+        }
+    }
+
     bool interactive_ = false;
 #ifndef _WIN32
     bool active_ = false;
@@ -112,6 +206,10 @@ private:
 std::string normalizedField(const std::string& field) {
     if (field == "humidity" || field == "humidity_percent") {
         return "humidity";
+    }
+
+    if (field == "light" || field == "light_w_m2") {
+        return "light";
     }
 
     if (field == "temperature_error" || field == "error") {
@@ -138,6 +236,10 @@ double cellFieldValue(
 
     if (activeField == "humidity") {
         return cell.humidityPercent;
+    }
+
+    if (activeField == "light") {
+        return cell.lightWm2;
     }
 
     if (activeField == "temperature_error") {
@@ -222,6 +324,10 @@ bool sameViewCell(
     return projectDevicesToLayer || deviceCell.z == z;
 }
 
+bool samePlanCell(const GridIndex& left, const GridIndex& right) {
+    return left.x == right.x && left.y == right.y;
+}
+
 bool cellInViewBlock(
     const GridIndex& deviceCell,
     int minX,
@@ -269,19 +375,19 @@ char deviceSymbolAt(
 
     for (const MappedHeater& heater : devices.heaters) {
         if (sameViewCell(heater.anchorCell, x, y, z, projectDevicesToLayer)) {
-            addDeviceSymbol('H', deviceCount, symbol);
+            addDeviceSymbol(heater.spec.failed ? 'h' : 'H', deviceCount, symbol);
         }
     }
 
     for (const MappedVent& vent : devices.vents) {
         if (sameViewCell(vent.anchorCell, x, y, z, projectDevicesToLayer)) {
-            addDeviceSymbol('V', deviceCount, symbol);
+            addDeviceSymbol(vent.spec.failed ? 'v' : 'V', deviceCount, symbol);
         }
     }
 
     for (const MappedHumidifier& humidifier : devices.humidifiers) {
         if (sameViewCell(humidifier.anchorCell, x, y, z, projectDevicesToLayer)) {
-            addDeviceSymbol('M', deviceCount, symbol);
+            addDeviceSymbol(humidifier.spec.failed ? 'm' : 'M', deviceCount, symbol);
         }
     }
 
@@ -308,19 +414,19 @@ char deviceSymbolInBlock(
 
     for (const MappedHeater& heater : devices.heaters) {
         if (cellInViewBlock(heater.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
-            addDeviceSymbol('H', deviceCount, symbol);
+            addDeviceSymbol(heater.spec.failed ? 'h' : 'H', deviceCount, symbol);
         }
     }
 
     for (const MappedVent& vent : devices.vents) {
         if (cellInViewBlock(vent.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
-            addDeviceSymbol('V', deviceCount, symbol);
+            addDeviceSymbol(vent.spec.failed ? 'v' : 'V', deviceCount, symbol);
         }
     }
 
     for (const MappedHumidifier& humidifier : devices.humidifiers) {
         if (cellInViewBlock(humidifier.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
-            addDeviceSymbol('M', deviceCount, symbol);
+            addDeviceSymbol(humidifier.spec.failed ? 'm' : 'M', deviceCount, symbol);
         }
     }
 
@@ -351,10 +457,13 @@ const char* deviceColor(char symbol) {
         case 'P':
             return "\033[32m";
         case 'H':
+        case 'h':
             return "\033[31m";
         case 'V':
+        case 'v':
             return "\033[36m";
         case 'M':
+        case 'm':
             return "\033[35m";
         case '*':
             return "\033[97m";
@@ -413,8 +522,11 @@ double blockFieldValue(
     return total / static_cast<double>(count);
 }
 
-void printSymbol(char symbol, const char* color, bool useColors) {
+void printSymbol(char symbol, const char* color, bool useColors, bool highlighted = false) {
     if (useColors) {
+        if (highlighted) {
+            std::cout << "\033[7m";
+        }
         std::cout << color << symbol << "\033[0m";
     } else {
         std::cout << symbol;
@@ -440,17 +552,102 @@ void printStats(const SimulationFrame& frame) {
     std::cout << "humidity avg: "
               << frame.climate.humidity.averageHumidityPercent
               << " %\n";
-    std::cout << "energy: "
+    std::cout << "plant health avg: "
+              << frame.plantGrowth.averageHealth
+              << " | growth avg: "
+              << frame.plantGrowth.averageGrowth
+              << " | alive: "
+              << frame.plantGrowth.aliveCount
+              << "\n";
+    std::cout << "controller reward: "
+              << frame.control.reward
+              << " | heater power: "
+              << frame.control.activeHeaterPowerW
+              << " W | failed devices: "
+              << frame.control.failedDeviceCount
+              << "\n";
+    std::cout << "heater energy: "
               << frame.cumulativeHeaterEnergyKWh
+              << " kWh | device energy: "
+              << frame.cumulativeDeviceEnergyKWh
               << " kWh\n";
+}
+
+void printSelectedCellInfo(
+    const SimulationFrame& frame,
+    const Grid3D& grid,
+    const MappedDeviceSet& devices,
+    const GridIndex& cursor,
+    const std::string& message
+) {
+    if (!grid.contains(cursor)) {
+        return;
+    }
+
+    const std::size_t linear = grid.linearIndex(cursor);
+    if (linear >= frame.cells.size()) {
+        return;
+    }
+
+    const CellState& cell = frame.cells[linear];
+    std::cout << "\nSelected cell: " << grid.formatIndex(cursor) << "\n";
+    std::cout << "cell temp: " << cell.temperatureC
+              << " C | humidity: " << cell.humidityPercent
+              << " % | light: " << cell.lightWm2 << " W/m2\n";
+
+    for (const MappedPlantPoint& plant : devices.plants) {
+        if (samePlanCell(plant.cell, cursor)) {
+            std::cout << "plant: " << plant.plant.name
+                      << " | target temp " << plant.plant.targetTemperatureC
+                      << " C | target humidity "
+                      << plant.plant.targetHumidityPercent << " %\n";
+        }
+    }
+
+    for (const MappedHeater& heater : devices.heaters) {
+        if (samePlanCell(heater.anchorCell, cursor)) {
+            std::cout << "heater: " << heater.spec.name
+                      << " | power " << heater.spec.powerW
+                      << "/" << effectiveHeaterMaxPowerW(heater.spec)
+                      << " W | failed "
+                      << (heater.spec.failed ? "yes" : "no") << "\n";
+        }
+    }
+
+    for (const MappedHumidifier& humidifier : devices.humidifiers) {
+        if (samePlanCell(humidifier.anchorCell, cursor)) {
+            std::cout << "humidifier: " << humidifier.spec.name
+                      << " | mode " << humidifier.spec.mode
+                      << " | level " << humidifier.spec.level
+                      << " | failed "
+                      << (humidifier.spec.failed ? "yes" : "no") << "\n";
+        }
+    }
+
+    for (const MappedVent& vent : devices.vents) {
+        if (samePlanCell(vent.anchorCell, cursor)) {
+            std::cout << "vent: " << vent.spec.name
+                      << " | opening " << vent.spec.opening
+                      << " | failed "
+                      << (vent.spec.failed ? "yes" : "no") << "\n";
+        }
+    }
+
+    if (!message.empty()) {
+        std::cout << "message: " << message << "\n";
+    }
 }
 
 void printFrame(
     const SimulationFrame& frame,
     const Grid3D& grid,
     const MappedDeviceSet& devices,
-    const TerminalViewSpec& view
+    const TerminalViewSpec& view,
+    const GridIndex* cursor = nullptr,
+    const std::string& message = {}
 ) {
+    const MappedDeviceSet& activeDevices =
+        frame.devices.plants.empty() ? devices : frame.devices;
     const int layerZ = clampedLayerZ(grid, view.layerZ);
     const ValueRange range = frameValueRange(frame, view);
     const GridSize size = grid.gridSize();
@@ -476,6 +673,9 @@ void printFrame(
     if (view.loopPlayback) {
         std::cout << "Loop playback: press Esc to stop animation\n\n";
     }
+    if (view.interactive) {
+        std::cout << "Interactive: arrows/WASD move | Enter/F fail/repair device | T field | Z/X layer | Space pause | Esc finish\n\n";
+    }
 
     for (int yTop = size.ny - 1; yTop >= 0; yTop -= strideY) {
         const int minY = std::max(0, yTop - strideY + 1);
@@ -495,7 +695,7 @@ void printFrame(
                     minY,
                     maxY,
                     layerZ,
-                    devices,
+                    activeDevices,
                     view.projectDevicesToLayer
                 );
 
@@ -505,7 +705,13 @@ void printFrame(
                 }
             }
 
-            printSymbol(symbol, color, view.useColors);
+            const bool highlighted =
+                cursor != nullptr
+                && cursor->x >= minX
+                && cursor->x <= maxX
+                && cursor->y >= minY
+                && cursor->y <= maxY;
+            printSymbol(symbol, color, view.useColors, highlighted);
         }
 
         std::cout << "\n";
@@ -513,9 +719,12 @@ void printFrame(
 
     std::cout << "\nLegend:\n";
     std::cout << "low  . : - = + * # % @  high\n";
-    std::cout << "P plant | H heater | V vent | M humidifier | * multiple devices\n";
+    std::cout << "P plant | H heater | V vent | M humidifier | lowercase failed | * multiple devices\n";
 
     printStats(frame);
+    if (cursor != nullptr) {
+        printSelectedCellInfo(frame, grid, activeDevices, *cursor, message);
+    }
     std::cout << std::flush;
 }
 
@@ -583,6 +792,93 @@ bool replayOnce(
     return input.escapePressed();
 }
 
+void moveCursor(GridIndex& cursor, const Grid3D& grid, TerminalKey key) {
+    GridIndex next = cursor;
+    switch (key) {
+        case TerminalKey::Up:
+            ++next.y;
+            break;
+        case TerminalKey::Down:
+            --next.y;
+            break;
+        case TerminalKey::Left:
+            --next.x;
+            break;
+        case TerminalKey::Right:
+            ++next.x;
+            break;
+        default:
+            break;
+    }
+
+    const GridSize size = grid.gridSize();
+    next.x = std::clamp(next.x, 0, size.nx - 1);
+    next.y = std::clamp(next.y, 0, size.ny - 1);
+    next.z = std::clamp(next.z, 0, size.nz - 1);
+    cursor = next;
+}
+
+void cycleField(TerminalViewSpec& view) {
+    const std::string field = normalizedField(view.field);
+    if (field == "temperature") {
+        view.field = "humidity";
+    } else if (field == "humidity") {
+        view.field = "light";
+    } else if (field == "light") {
+        view.field = "temperature_error";
+    } else {
+        view.field = "temperature";
+    }
+}
+
+bool handleInteractiveKey(
+    TerminalKey key,
+    SimulationStepper& stepper,
+    const Grid3D& grid,
+    TerminalViewSpec& view,
+    GridIndex& cursor,
+    bool& paused,
+    std::string& message
+) {
+    switch (key) {
+        case TerminalKey::None:
+            return true;
+        case TerminalKey::Escape:
+            return false;
+        case TerminalKey::Up:
+        case TerminalKey::Down:
+        case TerminalKey::Left:
+        case TerminalKey::Right:
+            moveCursor(cursor, grid, key);
+            return true;
+        case TerminalKey::Enter:
+        case TerminalKey::ToggleFailure:
+            if (stepper.toggleDeviceFailureAt(cursor)) {
+                message = "device failure state changed";
+            } else {
+                message = "no device at selected cell";
+            }
+            return true;
+        case TerminalKey::CycleField:
+            cycleField(view);
+            return true;
+        case TerminalKey::LayerDown:
+            view.layerZ = std::max(0, view.layerZ - 1);
+            cursor.z = clampedLayerZ(grid, view.layerZ);
+            return true;
+        case TerminalKey::LayerUp:
+            view.layerZ = std::min(grid.gridSize().nz - 1, view.layerZ + 1);
+            cursor.z = clampedLayerZ(grid, view.layerZ);
+            return true;
+        case TerminalKey::Pause:
+            paused = !paused;
+            message = paused ? "paused" : "running";
+            return true;
+    }
+
+    return true;
+}
+
 } // namespace
 
 void replaySimulationInTerminal(
@@ -608,6 +904,94 @@ void replaySimulationInTerminal(
             break;
         }
     }
+}
+
+SimulationResult runInteractiveSimulationInTerminal(
+    const SimulationConfig& config,
+    const Grid3D& grid,
+    const WeatherTimeline& weather,
+    const MaterialProperties& material,
+    const MappedDeviceSet& devices,
+    const ClimatePhysicsSettings& settings
+) {
+    TerminalViewSpec view = config.output.terminalView;
+    if (!view.enabled || !view.interactive) {
+        return runSimulation(config, grid, weather, material, devices, settings);
+    }
+
+    TerminalInput input;
+    if (!input.isInteractive()) {
+        return runSimulation(config, grid, weather, material, devices, settings);
+    }
+
+    SimulationConfig activeConfig = config;
+    activeConfig.output.terminalView = view;
+    SimulationStepper stepper(
+        activeConfig,
+        grid,
+        weather,
+        material,
+        devices,
+        settings
+    );
+
+    GridIndex cursor{
+        0,
+        0,
+        clampedLayerZ(grid, view.layerZ)
+    };
+    bool paused = false;
+    bool running = true;
+    std::string message;
+
+    while (running) {
+        view.layerZ = clampedLayerZ(grid, view.layerZ);
+        cursor.z = view.layerZ;
+        printFrame(
+            stepper.currentFrame(),
+            grid,
+            stepper.devices(),
+            view,
+            &cursor,
+            message
+        );
+
+        if (stepper.finished()) {
+            break;
+        }
+
+        message.clear();
+        const int sleepMs = std::max(25, view.sleepMs);
+        int elapsed = 0;
+        while (elapsed < sleepMs) {
+            const TerminalKey key = input.pollKey();
+            if (key != TerminalKey::None) {
+                running = handleInteractiveKey(
+                    key,
+                    stepper,
+                    grid,
+                    view,
+                    cursor,
+                    paused,
+                    message
+                );
+                break;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(25));
+            elapsed += 25;
+        }
+
+        if (!running) {
+            break;
+        }
+
+        if (!paused) {
+            stepper.step();
+        }
+    }
+
+    return stepper.result();
 }
 
 } // namespace greenhouse

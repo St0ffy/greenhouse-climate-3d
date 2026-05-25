@@ -185,8 +185,18 @@ int main(int argc, char* argv[]) {
                 greenhouse::buildOptimizationReport(optimization, grid);
         } else {
             const greenhouse::SimulationResult result =
-                greenhouse::runSimulation(config, grid, weather, material, devices);
-            greenhouse::replaySimulationInTerminal(result, grid, devices);
+                config.output.terminalView.interactive
+                    ? greenhouse::runInteractiveSimulationInTerminal(
+                        config,
+                        grid,
+                        weather,
+                        material,
+                        devices
+                    )
+                    : greenhouse::runSimulation(config, grid, weather, material, devices);
+            if (!config.output.terminalView.interactive) {
+                greenhouse::replaySimulationInTerminal(result, grid, devices);
+            }
             exported =
                 greenhouse::exportSimulationResult(result, grid, config.output);
             reportText =

@@ -97,7 +97,10 @@ std::vector<double> buildHeaterDeltas(
 
     for (const MappedHeater& heater : devices.heaters) {
         const double totalWeight = sumInfluenceWeights(heater.influenceCells);
-        if (totalWeight <= 0.0 || heater.spec.powerW <= 0.0) {
+        if (totalWeight <= 0.0
+            || heater.spec.powerW <= 0.0
+            || !heater.spec.enabled
+            || heater.spec.failed) {
             continue;
         }
 
@@ -127,9 +130,14 @@ std::vector<double> buildHumidifierDeltas(
     }
 
     for (const MappedHumidifier& humidifier : devices.humidifiers) {
-        const double modeMultiplier = humidifierModeMultiplier(humidifier.spec.mode);
+        const double modeMultiplier =
+            humidifierModeMultiplier(humidifier.spec.mode)
+            * humidifier.spec.level;
         const double totalWeight = sumInfluenceWeights(humidifier.influenceCells);
-        if (totalWeight <= 0.0 || modeMultiplier <= 0.0) {
+        if (totalWeight <= 0.0
+            || modeMultiplier <= 0.0
+            || !humidifier.spec.enabled
+            || humidifier.spec.failed) {
             continue;
         }
 
@@ -154,10 +162,37 @@ double ventMixFactor(
     double maxMix
 ) {
     return std::clamp(
-        vent.spec.opening * cell.weight * ratePerSecond * timeStepSeconds,
+        (vent.spec.enabled && !vent.spec.failed ? vent.spec.opening : 0.0)
+            * cell.weight
+            * ratePerSecond
+            * timeStepSeconds,
         0.0,
         maxMix
     );
+}
+
+double activeHumidifierPowerW(const MappedDeviceSet& devices) {
+    double total = 0.0;
+    for (const MappedHumidifier& humidifier : devices.humidifiers) {
+        if (!humidifier.spec.enabled || humidifier.spec.failed) {
+            continue;
+        }
+        const double relativeMode =
+            std::clamp(humidifierModeMultiplier(humidifier.spec.mode) / 1.5, 0.0, 1.0);
+        total += humidifier.spec.powerW * humidifier.spec.level * relativeMode;
+    }
+    return total;
+}
+
+double activeVentPowerW(const MappedDeviceSet& devices) {
+    double total = 0.0;
+    for (const MappedVent& vent : devices.vents) {
+        if (!vent.spec.enabled || vent.spec.failed) {
+            continue;
+        }
+        total += vent.spec.powerW * std::clamp(vent.spec.opening, 0.0, 1.0);
+    }
+    return total;
 }
 
 } // namespace
@@ -216,6 +251,20 @@ HumidityStats summarizeHumidity(const std::vector<CellState>& cells) {
         maxHumidity,
         totalHumidity / static_cast<double>(cells.size())
     };
+}
+
+double estimateCellLightWm2(
+    const Grid3D& grid,
+    const GridIndex& index,
+    const WeatherCondition& weather,
+    const MaterialProperties& material
+) {
+    return std::max(
+        0.0,
+        weather.solarRadiationWm2
+            * material.solarTransmission
+            * heightSolarFactor(grid, index)
+    );
 }
 
 PlantTemperatureStats summarizePlantTemperatures(
@@ -339,6 +388,8 @@ TemperatureStepResult advanceTemperature(
             settings
         );
         next[linear].humidityPercent = current[linear].humidityPercent;
+        next[linear].lightWm2 =
+            estimateCellLightWm2(grid, index, weather, material);
 
         totalNeighborExchangeAbs += std::fabs(neighborDelta);
         totalBoundaryLoss += boundaryDelta;
@@ -415,7 +466,7 @@ ClimateStepResult advanceClimate(
     }
 
     for (const MappedVent& vent : devices.vents) {
-        if (vent.spec.opening <= 0.0) {
+        if (vent.spec.opening <= 0.0 || !vent.spec.enabled || vent.spec.failed) {
             continue;
         }
 
@@ -463,6 +514,14 @@ ClimateStepResult advanceClimate(
     summary.averageHumidifierGainPercent = totalHumidifierGain / cellCount;
     summary.averageVentTemperatureDeltaC = totalVentTemperatureDelta / cellCount;
     summary.averageVentHumidityDeltaPercent = totalVentHumidityDelta / cellCount;
+    summary.humidifierEnergyKWh =
+        activeHumidifierPowerW(devices) * timeStepSeconds / 3'600'000.0;
+    summary.ventEnergyKWh =
+        activeVentPowerW(devices) * timeStepSeconds / 3'600'000.0;
+    summary.totalDeviceEnergyKWh =
+        summary.temperatureStep.heaterEnergyKWh
+        + summary.humidifierEnergyKWh
+        + summary.ventEnergyKWh;
 
     return {next, summary};
 }

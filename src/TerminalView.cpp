@@ -377,6 +377,25 @@ char sensorSymbolForPlant(
     return 's';
 }
 
+bool heaterIsWorking(const MappedHeater& heater) {
+    return heater.spec.enabled
+        && !heater.spec.failed
+        && heater.spec.powerW > 1e-9;
+}
+
+bool ventIsWorking(const MappedVent& vent) {
+    return vent.spec.enabled
+        && !vent.spec.failed
+        && vent.spec.opening > 1e-9;
+}
+
+bool humidifierIsWorking(const MappedHumidifier& humidifier) {
+    return humidifier.spec.enabled
+        && !humidifier.spec.failed
+        && humidifier.spec.level > 1e-9
+        && humidifierModeMultiplier(humidifier.spec.mode) > 0.0;
+}
+
 std::string sensorStatusText(
     const MappedPlantPoint& plant,
     const SimulationFrame& frame
@@ -443,19 +462,19 @@ char deviceSymbolAt(
 
     for (const MappedHeater& heater : devices.heaters) {
         if (sameViewCell(heater.anchorCell, x, y, z, projectDevicesToLayer)) {
-            addDeviceSymbol(heater.spec.failed ? 'h' : 'H', deviceCount, symbol);
+            addDeviceSymbol(heaterIsWorking(heater) ? 'H' : 'h', deviceCount, symbol);
         }
     }
 
     for (const MappedVent& vent : devices.vents) {
         if (sameViewCell(vent.anchorCell, x, y, z, projectDevicesToLayer)) {
-            addDeviceSymbol(vent.spec.failed ? 'v' : 'V', deviceCount, symbol);
+            addDeviceSymbol(ventIsWorking(vent) ? 'V' : 'v', deviceCount, symbol);
         }
     }
 
     for (const MappedHumidifier& humidifier : devices.humidifiers) {
         if (sameViewCell(humidifier.anchorCell, x, y, z, projectDevicesToLayer)) {
-            addDeviceSymbol(humidifier.spec.failed ? 'm' : 'M', deviceCount, symbol);
+            addDeviceSymbol(humidifierIsWorking(humidifier) ? 'M' : 'm', deviceCount, symbol);
         }
     }
 
@@ -488,19 +507,19 @@ char deviceSymbolInBlock(
 
     for (const MappedHeater& heater : devices.heaters) {
         if (cellInViewBlock(heater.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
-            addDeviceSymbol(heater.spec.failed ? 'h' : 'H', deviceCount, symbol);
+            addDeviceSymbol(heaterIsWorking(heater) ? 'H' : 'h', deviceCount, symbol);
         }
     }
 
     for (const MappedVent& vent : devices.vents) {
         if (cellInViewBlock(vent.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
-            addDeviceSymbol(vent.spec.failed ? 'v' : 'V', deviceCount, symbol);
+            addDeviceSymbol(ventIsWorking(vent) ? 'V' : 'v', deviceCount, symbol);
         }
     }
 
     for (const MappedHumidifier& humidifier : devices.humidifiers) {
         if (cellInViewBlock(humidifier.anchorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
-            addDeviceSymbol(humidifier.spec.failed ? 'm' : 'M', deviceCount, symbol);
+            addDeviceSymbol(humidifierIsWorking(humidifier) ? 'M' : 'm', deviceCount, symbol);
         }
     }
 
@@ -537,14 +556,17 @@ const char* deviceColor(char symbol) {
         case '!':
             return "\033[91m";
         case 'H':
-        case 'h':
             return "\033[31m";
+        case 'h':
+            return "\033[90m";
         case 'V':
-        case 'v':
             return "\033[36m";
+        case 'v':
+            return "\033[90m";
         case 'M':
-        case 'm':
             return "\033[35m";
+        case 'm':
+            return "\033[90m";
         case '*':
             return "\033[97m";
         default:
@@ -700,7 +722,9 @@ void printSelectedCellInfo(
             std::cout << "heater: " << heater.spec.name
                       << " | power " << heater.spec.powerW
                       << "/" << effectiveHeaterMaxPowerW(heater.spec)
-                      << " W | failed "
+                      << " W | working "
+                      << (heaterIsWorking(heater) ? "yes" : "no")
+                      << " | failed "
                       << (heater.spec.failed ? "yes" : "no") << "\n";
         }
     }
@@ -710,6 +734,8 @@ void printSelectedCellInfo(
             std::cout << "humidifier: " << humidifier.spec.name
                       << " | mode " << humidifier.spec.mode
                       << " | level " << humidifier.spec.level
+                      << " | working "
+                      << (humidifierIsWorking(humidifier) ? "yes" : "no")
                       << " | failed "
                       << (humidifier.spec.failed ? "yes" : "no") << "\n";
         }
@@ -719,6 +745,8 @@ void printSelectedCellInfo(
         if (samePlanCell(vent.anchorCell, cursor)) {
             std::cout << "vent: " << vent.spec.name
                       << " | opening " << vent.spec.opening
+                      << " | working "
+                      << (ventIsWorking(vent) ? "yes" : "no")
                       << " | failed "
                       << (vent.spec.failed ? "yes" : "no") << "\n";
         }
@@ -811,7 +839,7 @@ void printFrame(
 
     std::cout << "\nLegend:\n";
     std::cout << "low  . : - = + * # % @  high\n";
-    std::cout << "P plant | S sensor active | s sensor stable | ! sensor high | H heater | V vent | M humidifier | lowercase failed | * multiple devices\n";
+    std::cout << "P plant | S sensor active | s sensor stable | ! sensor high | H/V/M working devices | h/v/m idle or failed | * multiple devices\n";
 
     printStats(frame);
     if (cursor != nullptr) {

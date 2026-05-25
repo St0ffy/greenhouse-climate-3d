@@ -99,6 +99,8 @@ std::string buildSimulationReport(
                << final.plantTemperature.maxAbsoluteErrorC << "\n";
         report << "Plant average humidity, %: "
                << final.plantHumidity.averageHumidityPercent << "\n";
+        report << "Average plant humidity uptake, % per cell: "
+               << final.climate.averagePlantHumidityUptakePercent << "\n";
         report << "Plant average health: "
                << final.plantGrowth.averageHealth << "\n";
         report << "Plant min health: "

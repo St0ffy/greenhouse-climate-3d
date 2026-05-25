@@ -195,6 +195,52 @@ double activeVentPowerW(const MappedDeviceSet& devices) {
     return total;
 }
 
+double plantHumidityUptakeForStep(
+    const HumidityPhysicsSettings& settings,
+    double timeStepSeconds
+) {
+    return std::clamp(
+        settings.plantHumidityUptakePercentPerSecond * timeStepSeconds,
+        0.0,
+        settings.maxPlantHumidityUptakePercentPerStep
+    );
+}
+
+double applyPlantHumidityUptake(
+    std::vector<CellState>& cells,
+    const MappedDeviceSet& devices,
+    const HumidityPhysicsSettings& settings,
+    double timeStepSeconds
+) {
+    const double uptake = plantHumidityUptakeForStep(settings, timeStepSeconds);
+    if (uptake <= 0.0 || cells.empty()) {
+        return 0.0;
+    }
+
+    double totalUptake = 0.0;
+    for (const MappedPlantPoint& plant : devices.plants) {
+        if (plant.linearIndex < cells.size()) {
+            const double actual =
+                std::min(uptake, cells[plant.linearIndex].humidityPercent);
+            cells[plant.linearIndex].humidityPercent =
+                clampHumidity(cells[plant.linearIndex].humidityPercent - actual);
+            totalUptake += actual;
+        }
+
+        if (plant.sensorLinearIndex < cells.size()
+            && plant.sensorLinearIndex != plant.linearIndex) {
+            const double sensorUptake = uptake * 0.50;
+            const double actual =
+                std::min(sensorUptake, cells[plant.sensorLinearIndex].humidityPercent);
+            cells[plant.sensorLinearIndex].humidityPercent =
+                clampHumidity(cells[plant.sensorLinearIndex].humidityPercent - actual);
+            totalUptake += actual;
+        }
+    }
+
+    return totalUptake;
+}
+
 } // namespace
 
 std::vector<CellState> makeInitialCells(
@@ -436,6 +482,7 @@ ClimateStepResult advanceClimate(
     std::vector<CellState> next = temperatureStep.cells;
     double totalHumidityExchangeAbs = 0.0;
     double totalHumidifierGain = 0.0;
+    double totalPlantHumidityUptake = 0.0;
     double totalVentTemperatureDelta = 0.0;
     double totalVentHumidityDelta = 0.0;
 
@@ -459,6 +506,14 @@ ClimateStepResult advanceClimate(
             totalHumidityExchangeAbs += std::fabs(diffusionDelta);
             totalHumidifierGain += humidifierDelta;
         }
+
+        totalPlantHumidityUptake =
+            applyPlantHumidityUptake(
+                next,
+                devices,
+                settings.humidity,
+                timeStepSeconds
+            );
     } else {
         for (std::size_t linear = 0; linear < current.size(); ++linear) {
             next[linear].humidityPercent = current[linear].humidityPercent;
@@ -512,6 +567,7 @@ ClimateStepResult advanceClimate(
     summary.humidity = summarizeHumidity(next);
     summary.averageHumidityExchangeAbsPercent = totalHumidityExchangeAbs / cellCount;
     summary.averageHumidifierGainPercent = totalHumidifierGain / cellCount;
+    summary.averagePlantHumidityUptakePercent = totalPlantHumidityUptake / cellCount;
     summary.averageVentTemperatureDeltaC = totalVentTemperatureDelta / cellCount;
     summary.averageVentHumidityDeltaPercent = totalVentHumidityDelta / cellCount;
     summary.humidifierEnergyKWh =

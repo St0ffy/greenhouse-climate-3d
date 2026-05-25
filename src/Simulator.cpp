@@ -80,6 +80,10 @@ SimulationStepper::SimulationStepper(
     validateSimulationConfig(config_);
 
     settings_.humidity.humidityEnabled = config_.humidityEnabled;
+    settings_.humidity.plantHumidityUptakePercentPerSecond =
+        std::max(0.0, config_.plantPhysics.humidityUptakePercentPerHour) / 3600.0;
+    settings_.humidity.maxPlantHumidityUptakePercentPerStep =
+        std::max(0.0, config_.plantPhysics.maxHumidityUptakePercentPerStep);
     refreshDeviceRuntimeTotals(devices_);
 
     cells_ =

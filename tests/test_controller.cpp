@@ -37,6 +37,14 @@ int main() {
     assert(devices.heaters[1].spec.powerW > 0.0);
     assert(devices.humidifiers.front().spec.mode != "off");
 
+    const std::vector<greenhouse::PlantSensorReading> satisfiedSensors = {
+        {"plant", {0, 0, 0}, {0, 0, 0}, 0, 22.0, 61.0, 300.0}
+    };
+    const greenhouse::ControlStepSummary satisfiedSummary =
+        controller.apply(devices, devices.plants, satisfiedSensors, states);
+    assert(satisfiedSummary.enabled);
+    assert(devices.humidifiers.front().spec.mode == "off");
+
     greenhouse::PlantGrowthStats stats;
     stats.averageComfort = 0.8;
     stats.averageHealth = 1.0;

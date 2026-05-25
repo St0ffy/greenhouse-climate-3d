@@ -1,159 +1,120 @@
 {
   "run": {
     "mode": "simulate",
-    "duration_seconds": 21600,
+    "duration_seconds": 604800,
     "time_step_seconds": 60
   },
   "greenhouse": {
-    "length_m": 12.0,
-    "width_m": 6.0,
+    "length_m": 48.0,
+    "width_m": 8.0,
     "height_m": 3.0
   },
   "grid": {
-    "nx": 12,
-    "ny": 6,
+    "nx": 48,
+    "ny": 8,
     "nz": 4
   },
   "initial_state": {
     "temperature_c": 18.0,
-    "humidity_percent": 60.0
+    "humidity_percent": 55.0
   },
   "weather": {
     "outside_temperature_c": 5.0,
-    "outside_humidity_percent": 75.0,
-    "solar_radiation_w_m2": 350.0,
-    "weather_file": "data/weather_sample.csv"
+    "outside_humidity_percent": 45.0,
+    "solar_radiation_w_m2": 320.0,
+    "weather_file": "data/week_weather.csv"
   },
   "material": {
     "name": "polycarbonate",
-    "heat_loss_coefficient": 0.35,
+    "heat_loss_coefficient": 0.38,
     "solar_transmission": 0.75
   },
   "vents": [
-    {
-      "name": "left_roof_vent",
-      "position": [2.0, 0.5, 2.8],
-      "opening": 0.3,
-      "influence_radius_m": 2.0,
-      "enabled": true,
-      "failed": false,
-      "power_w": 20.0
-    },
-    {
-      "name": "right_roof_vent",
-      "position": [10.0, 5.5, 2.8],
-      "opening": 0.3,
-      "influence_radius_m": 2.0,
-      "enabled": true,
-      "failed": false,
-      "power_w": 20.0
-    }
+    {"name": "left_side_1", "position": [3.0, 0.2, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "right_side_1", "position": [3.0, 7.8, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "left_side_2", "position": [9.0, 0.2, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "right_side_2", "position": [9.0, 7.8, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "left_side_3", "position": [15.0, 0.2, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "right_side_3", "position": [15.0, 7.8, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "left_side_4", "position": [21.0, 0.2, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "right_side_4", "position": [21.0, 7.8, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "left_side_5", "position": [27.0, 0.2, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "right_side_5", "position": [27.0, 7.8, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "left_side_6", "position": [33.0, 0.2, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "right_side_6", "position": [33.0, 7.8, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "left_side_7", "position": [39.0, 0.2, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "right_side_7", "position": [39.0, 7.8, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "left_side_8", "position": [45.0, 0.2, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0},
+    {"name": "right_side_8", "position": [45.0, 7.8, 1.6], "opening": 0.25, "influence_radius_m": 3.2, "enabled": true, "failed": false, "power_w": 20.0}
   ],
   "heaters": [
-    {
-      "name": "heater_1",
-      "position": [3.0, 3.0, 0.2],
-      "power_w": 1200.0,
-      "max_power_w": 1800.0,
-      "influence_radius_m": 2.5,
-      "enabled": true,
-      "failed": false
-    },
-    {
-      "name": "heater_2",
-      "position": [9.0, 3.0, 0.2],
-      "power_w": 1200.0,
-      "max_power_w": 1800.0,
-      "influence_radius_m": 2.5,
-      "enabled": true,
-      "failed": false
-    }
+    {"name": "heater_1_left", "position": [6.0, 1.5, 0.2], "power_w": 900.0, "max_power_w": 1800.0, "influence_radius_m": 3.0, "enabled": true, "failed": false},
+    {"name": "heater_1_right", "position": [6.0, 6.5, 0.2], "power_w": 900.0, "max_power_w": 1800.0, "influence_radius_m": 3.0, "enabled": true, "failed": false},
+    {"name": "heater_2_left", "position": [18.0, 1.5, 0.2], "power_w": 900.0, "max_power_w": 1800.0, "influence_radius_m": 3.0, "enabled": true, "failed": false},
+    {"name": "heater_2_right", "position": [18.0, 6.5, 0.2], "power_w": 900.0, "max_power_w": 1800.0, "influence_radius_m": 3.0, "enabled": true, "failed": false},
+    {"name": "heater_3_left", "position": [30.0, 1.5, 0.2], "power_w": 900.0, "max_power_w": 1800.0, "influence_radius_m": 3.0, "enabled": true, "failed": false},
+    {"name": "heater_3_right", "position": [30.0, 6.5, 0.2], "power_w": 900.0, "max_power_w": 1800.0, "influence_radius_m": 3.0, "enabled": true, "failed": false},
+    {"name": "heater_4_left", "position": [42.0, 1.5, 0.2], "power_w": 900.0, "max_power_w": 1800.0, "influence_radius_m": 3.0, "enabled": true, "failed": false},
+    {"name": "heater_4_right", "position": [42.0, 6.5, 0.2], "power_w": 900.0, "max_power_w": 1800.0, "influence_radius_m": 3.0, "enabled": true, "failed": false}
   ],
   "humidity": {
     "enabled": true,
     "humidifier_mode": "medium"
   },
   "humidifiers": [
-    {
-      "name": "humidifier_1",
-      "position": [6.0, 3.0, 0.5],
-      "mode": "medium",
-      "influence_radius_m": 2.0,
-      "enabled": true,
-      "failed": false,
-      "level": 1.0,
-      "power_w": 150.0
-    }
+    {"name": "humidifier_1_left", "position": [12.0, 2.0, 0.5], "mode": "medium", "influence_radius_m": 3.5, "enabled": true, "failed": false, "level": 1.0, "power_w": 150.0},
+    {"name": "humidifier_1_right", "position": [12.0, 6.0, 0.5], "mode": "medium", "influence_radius_m": 3.5, "enabled": true, "failed": false, "level": 1.0, "power_w": 150.0},
+    {"name": "humidifier_2_left", "position": [24.0, 2.0, 0.5], "mode": "medium", "influence_radius_m": 3.5, "enabled": true, "failed": false, "level": 1.0, "power_w": 150.0},
+    {"name": "humidifier_2_right", "position": [24.0, 6.0, 0.5], "mode": "medium", "influence_radius_m": 3.5, "enabled": true, "failed": false, "level": 1.0, "power_w": 150.0},
+    {"name": "humidifier_3_left", "position": [36.0, 2.0, 0.5], "mode": "medium", "influence_radius_m": 3.5, "enabled": true, "failed": false, "level": 1.0, "power_w": 150.0},
+    {"name": "humidifier_3_right", "position": [36.0, 6.0, 0.5], "mode": "medium", "influence_radius_m": 3.5, "enabled": true, "failed": false, "level": 1.0, "power_w": 150.0}
   ],
   "plants": [
-    {
-      "name": "plant_1",
-      "position": [3.0, 2.0, 0.5],
-      "target_temperature_c": 22.0,
-      "target_humidity_percent": 62.0,
-      "target_light_w_m2": 300.0,
-      "min_survival_temperature_c": 8.0,
-      "max_survival_temperature_c": 35.0,
-      "min_survival_humidity_percent": 35.0,
-      "max_survival_humidity_percent": 90.0,
-      "min_survival_light_w_m2": 0.0,
-      "max_survival_light_w_m2": 1000.0,
-      "initial_health": 1.0,
-      "initial_growth": 0.0,
-      "sensor_height_m": 0.4
-    },
-    {
-      "name": "plant_2",
-      "position": [6.0, 3.0, 0.5],
-      "target_temperature_c": 23.0,
-      "target_humidity_percent": 65.0,
-      "target_light_w_m2": 320.0,
-      "min_survival_temperature_c": 8.0,
-      "max_survival_temperature_c": 35.0,
-      "min_survival_humidity_percent": 35.0,
-      "max_survival_humidity_percent": 90.0,
-      "min_survival_light_w_m2": 0.0,
-      "max_survival_light_w_m2": 1000.0,
-      "initial_health": 1.0,
-      "initial_growth": 0.0,
-      "sensor_height_m": 0.4
-    },
-    {
-      "name": "plant_3",
-      "position": [9.0, 4.0, 0.5],
-      "target_temperature_c": 21.5,
-      "target_humidity_percent": 60.0,
-      "target_light_w_m2": 300.0,
-      "min_survival_temperature_c": 8.0,
-      "max_survival_temperature_c": 35.0,
-      "min_survival_humidity_percent": 35.0,
-      "max_survival_humidity_percent": 90.0,
-      "min_survival_light_w_m2": 0.0,
-      "max_survival_light_w_m2": 1000.0,
-      "initial_health": 1.0,
-      "initial_growth": 0.0,
-      "sensor_height_m": 0.4
-    }
+    {"name": "plant_01", "position": [6.0, 2.0, 0.5], "target_temperature_c": 22.0, "target_humidity_percent": 62.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_02", "position": [6.0, 4.0, 0.5], "target_temperature_c": 22.5, "target_humidity_percent": 65.0, "target_light_w_m2": 320.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_03", "position": [6.0, 6.0, 0.5], "target_temperature_c": 21.5, "target_humidity_percent": 60.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_04", "position": [12.0, 2.0, 0.5], "target_temperature_c": 22.0, "target_humidity_percent": 62.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_05", "position": [12.0, 4.0, 0.5], "target_temperature_c": 22.5, "target_humidity_percent": 65.0, "target_light_w_m2": 320.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_06", "position": [12.0, 6.0, 0.5], "target_temperature_c": 21.5, "target_humidity_percent": 60.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_07", "position": [18.0, 2.0, 0.5], "target_temperature_c": 22.0, "target_humidity_percent": 62.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_08", "position": [18.0, 4.0, 0.5], "target_temperature_c": 22.5, "target_humidity_percent": 65.0, "target_light_w_m2": 320.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_09", "position": [18.0, 6.0, 0.5], "target_temperature_c": 21.5, "target_humidity_percent": 60.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_10", "position": [24.0, 2.0, 0.5], "target_temperature_c": 22.0, "target_humidity_percent": 62.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_11", "position": [24.0, 4.0, 0.5], "target_temperature_c": 22.5, "target_humidity_percent": 65.0, "target_light_w_m2": 320.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_12", "position": [24.0, 6.0, 0.5], "target_temperature_c": 21.5, "target_humidity_percent": 60.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_13", "position": [30.0, 2.0, 0.5], "target_temperature_c": 22.0, "target_humidity_percent": 62.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_14", "position": [30.0, 4.0, 0.5], "target_temperature_c": 22.5, "target_humidity_percent": 65.0, "target_light_w_m2": 320.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_15", "position": [30.0, 6.0, 0.5], "target_temperature_c": 21.5, "target_humidity_percent": 60.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_16", "position": [36.0, 2.0, 0.5], "target_temperature_c": 22.0, "target_humidity_percent": 62.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_17", "position": [36.0, 4.0, 0.5], "target_temperature_c": 22.5, "target_humidity_percent": 65.0, "target_light_w_m2": 320.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_18", "position": [36.0, 6.0, 0.5], "target_temperature_c": 21.5, "target_humidity_percent": 60.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_19", "position": [42.0, 2.0, 0.5], "target_temperature_c": 22.0, "target_humidity_percent": 62.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_20", "position": [42.0, 4.0, 0.5], "target_temperature_c": 22.5, "target_humidity_percent": 65.0, "target_light_w_m2": 320.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4},
+    {"name": "plant_21", "position": [42.0, 6.0, 0.5], "target_temperature_c": 21.5, "target_humidity_percent": 60.0, "target_light_w_m2": 300.0, "min_survival_temperature_c": 8.0, "max_survival_temperature_c": 35.0, "min_survival_humidity_percent": 35.0, "max_survival_humidity_percent": 90.0, "min_survival_light_w_m2": 0.0, "max_survival_light_w_m2": 1000.0, "initial_health": 1.0, "initial_growth": 0.0, "sensor_height_m": 0.4}
   ],
+  "plant_physics": {
+    "humidity_uptake_percent_per_hour": 0.45,
+    "max_humidity_uptake_percent_per_step": 0.18
+  },
   "controller": {
     "enabled": true,
     "ml_enabled": true,
     "energy_weight": 0.08,
     "learning_rate": 0.25,
-    "exploration_rate": 0.10,
+    "exploration_rate": 0.12,
     "comfort_weight": 1.0,
     "max_heater_level_change": 0.25
   },
   "optimizer": {
     "enabled": false,
-    "candidate_step_m": 1.0,
-    "max_candidates": 30,
+    "candidate_step_m": 2.0,
+    "max_candidates": 40,
     "max_layouts": 500,
     "energy_weight": 0.05
   },
   "output": {
     "directory": "outputs",
-    "write_csv": true,
+    "write_csv": false,
     "write_json": true,
     "write_report": true,
     "terminal_view": {
@@ -161,10 +122,10 @@
       "interactive": true,
       "field": "temperature",
       "layer_z": 0,
-      "display_stride_x": 1,
+      "display_stride_x": 2,
       "display_stride_y": 1,
-      "frame_interval_seconds": 600,
-      "sleep_ms": 150,
+      "frame_interval_seconds": 3600,
+      "sleep_ms": 80,
       "use_colors": true,
       "clear_screen": true,
       "loop_playback": false,

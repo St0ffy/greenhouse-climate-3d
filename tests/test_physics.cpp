@@ -267,6 +267,80 @@ int main() {
         const std::vector<greenhouse::PlantPoint> plants = {
             {"plant", {0.5, 0.5, 0.5}, 22.0}
         };
+        const greenhouse::MappedDeviceSet devices =
+            greenhouse::mapDeviceSetToGrid(plants, {}, {}, {}, grid);
+        const std::vector<greenhouse::CellState> cells =
+            greenhouse::makeInitialCells(grid, 20.0, 60.0);
+
+        greenhouse::ClimatePhysicsSettings settings;
+        settings.temperature.heatTransferRatePerSecond = 0.0;
+        settings.temperature.boundaryHeatLossRatePerSecond = 0.0;
+        settings.temperature.solarGainCPerWm2Second = 0.0;
+        settings.temperature.heaterGainCPerWattSecond = 0.0;
+        settings.humidity.humidityTransferRatePerSecond = 0.0;
+        settings.humidity.humidifierGainPercentPerSecond = 0.0;
+        settings.humidity.plantHumidityUptakePercentPerSecond = 0.01;
+        settings.humidity.maxPlantHumidityUptakePercentPerStep = 2.0;
+
+        const greenhouse::ClimateStepResult result =
+            greenhouse::advanceClimate(
+                cells,
+                grid,
+                noSun,
+                noLoss,
+                devices,
+                10.0,
+                settings
+            );
+
+        assert(result.cells.front().humidityPercent < 60.0);
+        assert(result.summary.averagePlantHumidityUptakePercent > 0.0);
+    }
+
+    {
+        const greenhouse::Grid3D grid({1.0, 1.0, 1.0}, {1, 1, 1});
+        const std::vector<greenhouse::PlantPoint> plants = {
+            {"plant", {0.5, 0.5, 0.5}, 22.0}
+        };
+        const std::vector<greenhouse::HumidifierSpec> humidifiers = {
+            {"humidifier", {0.5, 0.5, 0.5}, "high", 0.0}
+        };
+        const greenhouse::MappedDeviceSet devices =
+            greenhouse::mapDeviceSetToGrid(plants, {}, {}, humidifiers, grid);
+        const std::vector<greenhouse::CellState> cells =
+            greenhouse::makeInitialCells(grid, 20.0, 50.0);
+
+        greenhouse::ClimatePhysicsSettings settings;
+        settings.temperature.heatTransferRatePerSecond = 0.0;
+        settings.temperature.boundaryHeatLossRatePerSecond = 0.0;
+        settings.temperature.solarGainCPerWm2Second = 0.0;
+        settings.temperature.heaterGainCPerWattSecond = 0.0;
+        settings.humidity.humidityTransferRatePerSecond = 0.0;
+        settings.humidity.humidifierGainPercentPerSecond = 0.1;
+        settings.humidity.plantHumidityUptakePercentPerSecond = 0.01;
+        settings.humidity.maxPlantHumidityUptakePercentPerStep = 2.0;
+
+        const greenhouse::ClimateStepResult result =
+            greenhouse::advanceClimate(
+                cells,
+                grid,
+                noSun,
+                noLoss,
+                devices,
+                10.0,
+                settings
+            );
+
+        assert(result.cells.front().humidityPercent > 50.0);
+        assert(result.summary.averageHumidifierGainPercent
+            > result.summary.averagePlantHumidityUptakePercent);
+    }
+
+    {
+        const greenhouse::Grid3D grid({1.0, 1.0, 1.0}, {1, 1, 1});
+        const std::vector<greenhouse::PlantPoint> plants = {
+            {"plant", {0.5, 0.5, 0.5}, 22.0}
+        };
         const std::vector<greenhouse::VentSpec> vents = {
             {"vent", {0.5, 0.5, 0.5}, 1.0, 0.0}
         };

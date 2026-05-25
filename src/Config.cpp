@@ -242,6 +242,7 @@ SimulationConfig loadConfig(const std::string& path) {
     const std::string terminalViewSection =
         readObject(outputSection, "terminal_view");
     const std::string optimizerSection = readObject(text, "optimizer");
+    const std::string plantPhysicsSection = readObject(text, "plant_physics");
     const std::string controlSection = readObject(text, "controller");
     SimulationConfig config;
 
@@ -307,6 +308,10 @@ SimulationConfig loadConfig(const std::string& path) {
         readInt(optimizerSection, "max_candidates", 30),
         readInt(optimizerSection, "max_layouts", 500),
         readNumber(optimizerSection, "energy_weight", 0.05)
+    };
+    config.plantPhysics = {
+        readNumber(plantPhysicsSection, "humidity_uptake_percent_per_hour", 0.35),
+        readNumber(plantPhysicsSection, "max_humidity_uptake_percent_per_step", 0.25)
     };
     config.control = {
         readBool(controlSection, "enabled", false),

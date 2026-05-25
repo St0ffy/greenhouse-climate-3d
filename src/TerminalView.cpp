@@ -26,6 +26,8 @@ namespace greenhouse {
 namespace {
 
 constexpr const char* kScale = " .:-=+*#%@";
+constexpr double kTemperatureSatisfiedToleranceC = 0.5;
+constexpr double kHumiditySatisfiedTolerancePercent = 2.0;
 
 struct ValueRange {
     double minValue = 0.0;
@@ -328,6 +330,66 @@ bool samePlanCell(const GridIndex& left, const GridIndex& right) {
     return left.x == right.x && left.y == right.y;
 }
 
+bool sensorNeedsClimateWork(
+    const MappedPlantPoint& plant,
+    const SimulationFrame& frame
+) {
+    for (const PlantSensorReading& sensor : frame.sensorReadings) {
+        if (sensor.plantName == plant.plant.name) {
+            return sensor.temperatureC
+                    < plant.plant.targetTemperatureC - kTemperatureSatisfiedToleranceC
+                || sensor.humidityPercent
+                    < plant.plant.targetHumidityPercent - kHumiditySatisfiedTolerancePercent;
+        }
+    }
+
+    return false;
+}
+
+bool sensorTooHigh(
+    const MappedPlantPoint& plant,
+    const SimulationFrame& frame
+) {
+    for (const PlantSensorReading& sensor : frame.sensorReadings) {
+        if (sensor.plantName == plant.plant.name) {
+            return sensor.temperatureC
+                    > plant.plant.targetTemperatureC + kTemperatureSatisfiedToleranceC
+                || sensor.humidityPercent
+                    > plant.plant.targetHumidityPercent + kHumiditySatisfiedTolerancePercent;
+        }
+    }
+
+    return false;
+}
+
+char sensorSymbolForPlant(
+    const MappedPlantPoint& plant,
+    const SimulationFrame& frame
+) {
+    if (sensorNeedsClimateWork(plant, frame)) {
+        return 'S';
+    }
+
+    if (sensorTooHigh(plant, frame)) {
+        return '!';
+    }
+
+    return 's';
+}
+
+std::string sensorStatusText(
+    const MappedPlantPoint& plant,
+    const SimulationFrame& frame
+) {
+    if (sensorNeedsClimateWork(plant, frame)) {
+        return "needs heat/humidity";
+    }
+    if (sensorTooHigh(plant, frame)) {
+        return "needs venting";
+    }
+    return "stable";
+}
+
 bool cellInViewBlock(
     const GridIndex& deviceCell,
     int minX,
@@ -362,12 +424,18 @@ char deviceSymbolAt(
     int y,
     int z,
     const MappedDeviceSet& devices,
+    const SimulationFrame& frame,
     bool projectDevicesToLayer
 ) {
     int deviceCount = 0;
     char symbol = '\0';
 
     for (const MappedPlantPoint& plant : devices.plants) {
+        if (sameViewCell(plant.sensorCell, x, y, z, projectDevicesToLayer)) {
+            addDeviceSymbol(sensorSymbolForPlant(plant, frame), deviceCount, symbol);
+            continue;
+        }
+
         if (sameViewCell(plant.cell, x, y, z, projectDevicesToLayer)) {
             addDeviceSymbol('P', deviceCount, symbol);
         }
@@ -401,12 +469,18 @@ char deviceSymbolInBlock(
     int maxY,
     int z,
     const MappedDeviceSet& devices,
+    const SimulationFrame& frame,
     bool projectDevicesToLayer
 ) {
     int deviceCount = 0;
     char symbol = '\0';
 
     for (const MappedPlantPoint& plant : devices.plants) {
+        if (cellInViewBlock(plant.sensorCell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
+            addDeviceSymbol(sensorSymbolForPlant(plant, frame), deviceCount, symbol);
+            continue;
+        }
+
         if (cellInViewBlock(plant.cell, minX, maxX, minY, maxY, z, projectDevicesToLayer)) {
             addDeviceSymbol('P', deviceCount, symbol);
         }
@@ -456,6 +530,12 @@ const char* deviceColor(char symbol) {
     switch (symbol) {
         case 'P':
             return "\033[32m";
+        case 'S':
+            return "\033[33m";
+        case 's':
+            return "\033[92m";
+        case '!':
+            return "\033[91m";
         case 'H':
         case 'h':
             return "\033[31m";
@@ -551,6 +631,8 @@ void printStats(const SimulationFrame& frame) {
               << " C\n";
     std::cout << "humidity avg: "
               << frame.climate.humidity.averageHumidityPercent
+              << " % | plant uptake avg: "
+              << frame.climate.averagePlantHumidityUptakePercent
               << " %\n";
     std::cout << "plant health avg: "
               << frame.plantGrowth.averageHealth
@@ -596,11 +678,20 @@ void printSelectedCellInfo(
               << " % | light: " << cell.lightWm2 << " W/m2\n";
 
     for (const MappedPlantPoint& plant : devices.plants) {
-        if (samePlanCell(plant.cell, cursor)) {
+        if (samePlanCell(plant.cell, cursor) || samePlanCell(plant.sensorCell, cursor)) {
             std::cout << "plant: " << plant.plant.name
                       << " | target temp " << plant.plant.targetTemperatureC
                       << " C | target humidity "
                       << plant.plant.targetHumidityPercent << " %\n";
+            for (const PlantSensorReading& sensor : frame.sensorReadings) {
+                if (sensor.plantName == plant.plant.name) {
+                    std::cout << "sensor: " << grid.formatIndex(sensor.sensorCell)
+                              << " | status " << sensorStatusText(plant, frame)
+                              << " | temp " << sensor.temperatureC
+                              << " C | humidity " << sensor.humidityPercent
+                              << " % | light " << sensor.lightWm2 << " W/m2\n";
+                }
+            }
         }
     }
 
@@ -696,6 +787,7 @@ void printFrame(
                     maxY,
                     layerZ,
                     activeDevices,
+                    frame,
                     view.projectDevicesToLayer
                 );
 
@@ -719,7 +811,7 @@ void printFrame(
 
     std::cout << "\nLegend:\n";
     std::cout << "low  . : - = + * # % @  high\n";
-    std::cout << "P plant | H heater | V vent | M humidifier | lowercase failed | * multiple devices\n";
+    std::cout << "P plant | S sensor active | s sensor stable | ! sensor high | H heater | V vent | M humidifier | lowercase failed | * multiple devices\n";
 
     printStats(frame);
     if (cursor != nullptr) {

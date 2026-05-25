@@ -140,6 +140,11 @@ struct OptimizerSpec {
     double energyWeight = 0.05;
 };
 
+struct PlantPhysicsSpec {
+    double humidityUptakePercentPerHour = 0.35;
+    double maxHumidityUptakePercentPerStep = 0.25;
+};
+
 struct ClimateControlSpec {
     bool enabled = false;
     bool mlEnabled = false;

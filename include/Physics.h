@@ -53,6 +53,8 @@ struct HumidityPhysicsSettings {
     double ventHumidityExchangeRatePerSecond = 0.0040;
     double maxVentilationMixPerStep = 0.35;
     double humidifierGainPercentPerSecond = 0.030;
+    double plantHumidityUptakePercentPerSecond = 0.0;
+    double maxPlantHumidityUptakePercentPerStep = 0.25;
 };
 
 struct ClimatePhysicsSettings {
@@ -77,6 +79,7 @@ struct ClimateStepSummary {
     HumidityStats humidity;
     double averageHumidityExchangeAbsPercent = 0.0;
     double averageHumidifierGainPercent = 0.0;
+    double averagePlantHumidityUptakePercent = 0.0;
     double averageVentTemperatureDeltaC = 0.0;
     double averageVentHumidityDeltaPercent = 0.0;
     double humidifierEnergyKWh = 0.0;

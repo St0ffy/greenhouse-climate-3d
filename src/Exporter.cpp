@@ -97,6 +97,7 @@ void writeMetricsCsv(
         << "plant_avg_health,plant_min_health,plant_avg_growth,plant_avg_comfort,plant_alive_count,"
         << "controller_reward,active_heater_power_w,active_humidifier_count,failed_device_count,"
         << "cumulative_heater_energy_kwh,cumulative_device_energy_kwh,"
+        << "avg_plant_humidity_uptake_percent,"
         << "avg_vent_temperature_delta_c,avg_vent_humidity_delta_percent\n";
 
     for (const SimulationFrame& frame : result.frames) {
@@ -125,6 +126,7 @@ void writeMetricsCsv(
              << frame.control.failedDeviceCount << ','
              << frame.cumulativeHeaterEnergyKWh << ','
              << frame.cumulativeDeviceEnergyKWh << ','
+             << frame.climate.averagePlantHumidityUptakePercent << ','
              << frame.climate.averageVentTemperatureDeltaC << ','
              << frame.climate.averageVentHumidityDeltaPercent << '\n';
     }
@@ -170,6 +172,8 @@ void writeSummaryJson(
              << finalFrame->climate.temperatureStep.temperature.maxTemperatureC << ",\n";
         file << "    \"average_humidity_percent\": "
              << finalFrame->climate.humidity.averageHumidityPercent << ",\n";
+        file << "    \"average_plant_humidity_uptake_percent\": "
+             << finalFrame->climate.averagePlantHumidityUptakePercent << ",\n";
         file << "    \"plant_average_temperature_c\": "
              << finalFrame->plantTemperature.averageTemperatureC << ",\n";
         file << "    \"plant_average_temperature_error_c\": "

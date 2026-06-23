@@ -149,6 +149,7 @@ struct ClimateControlSpec {
     bool enabled = false;
     bool mlEnabled = false;
     bool mlMemoryEnabled = true;
+    bool mlMemoryLogEnabled = true;
     std::string strategy = "proportional";
     std::string mlMemoryPath = "outputs/ml_policy.json";
     int mlMemorySaveEverySteps = 50;

@@ -7,6 +7,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <filesystem>
 #include <string>
 
 int main() {
@@ -34,6 +35,10 @@ int main() {
     config.output.directory = "outputs/test_compare";
     config.output.terminalView.enabled = true;
     config.output.terminalView.interactive = true;
+    config.control.mlMemoryPath = "outputs/test_compare/ml_policy.json";
+
+    const std::filesystem::path policyPath(config.control.mlMemoryPath);
+    std::filesystem::remove(policyPath);
 
     const greenhouse::Grid3D grid(config.greenhouseSize, config.gridSize);
     const greenhouse::MappedDeviceSet devices =
@@ -61,9 +66,11 @@ int main() {
     assert(comparison.ml.result.config.control.enabled);
     assert(comparison.ml.result.config.control.strategy == "proportional");
     assert(comparison.ml.result.config.control.mlEnabled);
-    assert(!comparison.ml.result.config.control.mlMemoryEnabled);
+    assert(comparison.ml.result.config.control.mlMemoryEnabled);
+    assert(!comparison.ml.result.config.control.mlMemoryLogEnabled);
     assert(!comparison.ml.result.config.output.terminalView.enabled);
     assert(!comparison.ml.result.config.output.terminalView.interactive);
+    assert(std::filesystem::exists(policyPath));
     assert(
         comparison.onOff.result.config.output.directory.find("on_off")
         != std::string::npos
@@ -84,6 +91,8 @@ int main() {
     assert(terminalSummary.find("BEST") != std::string::npos);
     assert(terminalSummary.find("Metric") != std::string::npos);
     assert(terminalSummary.find("Verdict") == std::string::npos);
+
+    std::filesystem::remove(policyPath);
 
     return 0;
 }

@@ -30,7 +30,8 @@ SimulationConfig makeComparisonConfig(
     config.control.enabled = true;
     config.control.strategy = strategy;
     config.control.mlEnabled = mlEnabled;
-    config.control.mlMemoryEnabled = false;
+    config.control.mlMemoryEnabled = mlEnabled;
+    config.control.mlMemoryLogEnabled = false;
     config.output.directory =
         appendOutputSubdirectory(baseConfig.output.directory, label);
     config.output.terminalView.enabled = false;

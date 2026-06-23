@@ -76,6 +76,7 @@ int main() {
     assert(config.control.enabled);
     assert(config.control.mlEnabled);
     assert(config.control.mlMemoryEnabled);
+    assert(config.control.mlMemoryLogEnabled);
     assert(config.control.strategy == "proportional");
     assert(config.control.mlMemoryPath == "outputs/ml_policy.json");
     assert(config.control.mlMemorySaveEverySteps == 50);

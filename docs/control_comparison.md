@@ -13,7 +13,11 @@ The project has three command-line modes:
 
 - `on_off`: `controller.enabled=true`, `strategy=on_off`, `ml_enabled=false`.
 - `ml`: `controller.enabled=true`, `strategy=proportional`, `ml_enabled=true`,
-  `ml_memory_enabled=false`.
+  `ml_memory_enabled=true`.
+
+The ML branch loads and saves the configured policy file, usually
+`outputs/ml_policy.json`. That means results can change after each ML
+simulation or comparison run because the policy keeps learning.
 
 The `on_off` strategy is relay automation. It switches heaters, humidifiers,
 and vents fully on when plant sensors are outside the target tolerance, then

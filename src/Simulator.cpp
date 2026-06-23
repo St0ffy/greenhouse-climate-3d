@@ -61,6 +61,10 @@ int activeHumidifierCount(const MappedDeviceSet& devices) {
     return count;
 }
 
+bool modeUsesMlMemory(const std::string& mode) {
+    return mode == "simulate" || mode == "compare:ml";
+}
+
 } // namespace
 
 SimulationStepper::SimulationStepper(
@@ -79,7 +83,7 @@ SimulationStepper::SimulationStepper(
     devices_(devices) {
     validateSimulationConfig(config_);
     mlMemoryActive_ =
-        config_.mode == "simulate"
+        modeUsesMlMemory(config_.mode)
         && config_.control.enabled
         && config_.control.mlEnabled
         && config_.control.mlMemoryEnabled;

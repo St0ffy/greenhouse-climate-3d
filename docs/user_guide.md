@@ -147,7 +147,7 @@ What happens:
 1. Program runs the same scenario with `controller.strategy=on_off`.
 2. Program runs the same scenario with ML enabled over the proportional controller.
 3. Terminal playback is disabled for both runs.
-4. ML policy memory is disabled so the comparison is repeatable.
+4. ML policy memory is loaded and saved, so results can change as the policy learns.
 5. Results are exported to `on_off/` and `ml/` subdirectories.
 6. `comparison_report.txt` gives the final recommendation.
 

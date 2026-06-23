@@ -374,7 +374,9 @@ double AdaptiveClimateController::lastReward() const {
 bool AdaptiveClimateController::loadPolicy(const std::string& path) {
     std::ifstream input(path);
     if (!input) {
-        std::cout << "[ML] No existing policy found, starting fresh\n";
+        if (spec_.mlMemoryLogEnabled) {
+            std::cout << "[ML] No existing policy found, starting fresh\n";
+        }
         return false;
     }
 
@@ -392,7 +394,9 @@ bool AdaptiveClimateController::loadPolicy(const std::string& path) {
         || actionCount != static_cast<int>(actionValues_.size())
         || !readDoubleArray(text, "action_values", values)
         || values.size() != actionValues_.size()) {
-        std::cout << "[ML] Invalid policy file, starting fresh\n";
+        if (spec_.mlMemoryLogEnabled) {
+            std::cout << "[ML] Invalid policy file, starting fresh\n";
+        }
         std::fill(actionValues_.begin(), actionValues_.end(), 0.0);
         actionValues_[13] = 1e-6;
         lastReward_ = 0.0;
@@ -403,7 +407,9 @@ bool AdaptiveClimateController::loadPolicy(const std::string& path) {
     readDoubleField(text, "last_reward", lastReward);
     actionValues_ = values;
     lastReward_ = lastReward;
-    std::cout << "[ML] Loaded policy from " << path << "\n";
+    if (spec_.mlMemoryLogEnabled) {
+        std::cout << "[ML] Loaded policy from " << path << "\n";
+    }
     return true;
 }
 
@@ -416,7 +422,9 @@ bool AdaptiveClimateController::savePolicy(const std::string& path) const {
 
     std::ofstream output(path);
     if (!output) {
-        std::cout << "[ML] Could not save policy to " << path << "\n";
+        if (spec_.mlMemoryLogEnabled) {
+            std::cout << "[ML] Could not save policy to " << path << "\n";
+        }
         return false;
     }
 
@@ -443,7 +451,9 @@ bool AdaptiveClimateController::savePolicy(const std::string& path) const {
     output << "  }\n";
     output << "}\n";
 
-    std::cout << "[ML] Saved policy to " << path << "\n";
+    if (spec_.mlMemoryLogEnabled) {
+        std::cout << "[ML] Saved policy to " << path << "\n";
+    }
     return true;
 }
 

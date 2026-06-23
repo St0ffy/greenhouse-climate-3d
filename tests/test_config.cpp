@@ -76,11 +76,14 @@ int main() {
     assert(config.control.enabled);
     assert(config.control.mlEnabled);
     assert(config.control.mlMemoryEnabled);
+    assert(config.control.strategy == "proportional");
     assert(config.control.mlMemoryPath == "outputs/ml_policy.json");
     assert(config.control.mlMemorySaveEverySteps == 50);
     assert(almostEqual(config.control.energyWeight, 0.08));
     assert(almostEqual(config.control.learningRate, 0.25));
     assert(almostEqual(config.control.explorationRate, 0.12));
+    assert(almostEqual(config.control.temperatureToleranceC, 0.5));
+    assert(almostEqual(config.control.humidityTolerancePercent, 3.0));
 
     return 0;
 }

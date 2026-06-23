@@ -15,6 +15,17 @@ std::string formatBool(bool value) {
     return value ? "true" : "false";
 }
 
+std::string formatTargetTime(const ControlComparisonSummary& summary) {
+    if (!summary.targetReached) {
+        return "not reached";
+    }
+
+    std::ostringstream output;
+    output << std::fixed << std::setprecision(2)
+           << summary.targetReachedSeconds << " s";
+    return output.str();
+}
+
 std::filesystem::path ensureOutputDirectory(const OutputSpec& output) {
     const std::filesystem::path directory =
         output.directory.empty()
@@ -22,6 +33,44 @@ std::filesystem::path ensureOutputDirectory(const OutputSpec& output) {
             : std::filesystem::path(output.directory);
     std::filesystem::create_directories(directory);
     return directory;
+}
+
+void appendComparisonRun(
+    std::ostringstream& report,
+    const std::string& title,
+    const ControlComparisonRun& run,
+    double quality
+) {
+    const ControlComparisonSummary& summary = run.summary;
+    report << "\n" << title << "\n";
+    report << std::string(title.size(), '-') << "\n";
+    report << "Mode label: " << run.result.config.mode << "\n";
+    report << "Controller strategy: " << run.result.config.control.strategy << "\n";
+    report << "ML enabled: " << formatBool(run.result.config.control.mlEnabled) << "\n";
+    report << "Frames: " << run.result.frames.size() << "\n";
+    report << "Target reached: " << formatBool(summary.targetReached)
+           << " (" << formatTargetTime(summary) << ")\n";
+    report << "Final plant avg temperature error, C: "
+           << summary.finalAverageTemperatureErrorC << "\n";
+    report << "Final plant max temperature error, C: "
+           << summary.finalMaxTemperatureErrorC << "\n";
+    report << "Final plant avg humidity error, %: "
+           << summary.finalAverageHumidityErrorPercent << "\n";
+    report << "Final plant max humidity error, %: "
+           << summary.finalMaxHumidityErrorPercent << "\n";
+    report << "Final plant avg comfort: "
+           << summary.finalAverageComfort << "\n";
+    report << "Final plant avg health: "
+           << summary.finalAverageHealth << "\n";
+    report << "Final plant min health: "
+           << summary.finalMinHealth << "\n";
+    report << "Final alive plants: "
+           << summary.finalAlivePlants << "\n";
+    report << "Total heater energy, kWh: "
+           << summary.totalHeaterEnergyKWh << "\n";
+    report << "Total device energy, kWh: "
+           << summary.totalDeviceEnergyKWh << "\n";
+    report << "Comparison quality score: " << quality << "\n";
 }
 
 } // namespace
@@ -58,7 +107,8 @@ std::string buildSimulationReport(
     report << "Total heater energy, kWh: " << result.totalHeaterEnergyKWh << "\n";
     report << "Total device energy, kWh: " << result.totalDeviceEnergyKWh << "\n";
     report << "Controller enabled: " << formatBool(result.config.control.enabled)
-           << ", ML enabled: " << formatBool(result.config.control.mlEnabled) << "\n";
+           << ", ML enabled: " << formatBool(result.config.control.mlEnabled)
+           << ", strategy: " << result.config.control.strategy << "\n";
 
     if (!result.frames.empty()) {
         const SimulationFrame& initial = result.frames.front();
@@ -135,6 +185,35 @@ std::string buildSimulationReport(
     return report.str();
 }
 
+std::string buildControlComparisonReport(
+    const ControlComparisonResult& result,
+    const Grid3D& grid
+) {
+    std::ostringstream report;
+    report << std::fixed << std::setprecision(2);
+
+    report << "Greenhouse Climate 3D Control Comparison Report\n";
+    report << "===============================================\n";
+    report << "Grid: "
+           << grid.gridSize().nx << " x "
+           << grid.gridSize().ny << " x "
+           << grid.gridSize().nz
+           << " (" << grid.cellCount() << " cells)\n";
+    report << "Temperature tolerance, C: "
+           << result.onOff.result.config.control.temperatureToleranceC << "\n";
+    report << "Humidity tolerance, %: "
+           << result.onOff.result.config.control.humidityTolerancePercent << "\n";
+
+    appendComparisonRun(report, "On/off sensor automation", result.onOff, result.onOffQuality);
+    appendComparisonRun(report, "ML adaptive control", result.ml, result.mlQuality);
+
+    report << "\nRecommendation\n";
+    report << "--------------\n";
+    report << result.recommendation << "\n";
+
+    return report.str();
+}
+
 std::string buildOptimizationReport(
     const OptimizationResult& result,
     const Grid3D& grid
@@ -193,6 +272,25 @@ std::string writeReportFile(
 
     const std::filesystem::path reportPath =
         ensureOutputDirectory(output) / "report.txt";
+    std::ofstream file(reportPath);
+    if (!file) {
+        throw std::runtime_error("cannot open report file: " + reportPath.string());
+    }
+
+    file << reportText;
+    return reportPath.string();
+}
+
+std::string writeComparisonReportFile(
+    const std::string& reportText,
+    const OutputSpec& output
+) {
+    if (!output.writeReport) {
+        return {};
+    }
+
+    const std::filesystem::path reportPath =
+        ensureOutputDirectory(output) / "comparison_report.txt";
     std::ofstream file(reportPath);
     if (!file) {
         throw std::runtime_error("cannot open report file: " + reportPath.string());

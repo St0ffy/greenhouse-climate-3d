@@ -1,5 +1,25 @@
 # Greenhouse Climate 3D
 
+## Control Comparison
+
+The command-line modes are:
+
+- `simulate` - run one configured greenhouse scenario.
+- `optimize` - search for a better heater layout.
+- `compare` - run the same scenario twice and compare simple on/off sensor
+  automation against the ML-assisted controller.
+
+Quick comparison example:
+
+```bash
+./build/greenhouse3d compare examples/control_comparison/config.json
+```
+
+The main latest large demo is `configs/default_config.json`: it uses plant
+sensors, live terminal control, ML policy memory, and the learning-analysis
+workflow. The best short example for comparing ordinary automation and ML is
+`examples/control_comparison/config.json`.
+
 Учебный консольный C++ проект для приближенного 3D-моделирования микроклимата в теплице.
 
 
@@ -7,19 +27,21 @@
 
 Смоделировать изменение температуры и влажности внутри теплицы, разбитой на 3D-сетку. Пользователь задает размеры теплицы, сетку, погоду, материал покрытия, форточки, обогреватели, увлажнители и контрольные точки растений.
 
-Проект имеет два режима:
+Проект имеет три режима:
 
 - `simulate` - обычная симуляция по заданному конфигу.
 - `optimize` - подбор более удачного расположения обогревателей.
+- `compare` - сравнение обычной автоматики `on_off` и ML-контроллера.
 
 ## Быстрый запуск
 
 ```bash
 ./build/greenhouse3d simulate configs/default_config.json
 ./build/greenhouse3d optimize configs/default_config.json
+./build/greenhouse3d compare examples/control_comparison/config.json
 ```
 
-`simulate` считает заданный сценарий. `optimize` проверяет варианты расположения обогревателей и пишет рекомендацию в отчет.
+`simulate` считает заданный сценарий. `optimize` проверяет варианты расположения обогревателей и пишет рекомендацию в отчет. `compare` запускает один сценарий двумя способами и пишет `comparison_report.txt`.
 
 В режиме `simulate` можно включить терминальную карту слоя теплицы. Она показывает срез 3D-сетки по выбранному `z`-слою, раскрашивает значения температуры или влажности и накладывает символы устройств:
 

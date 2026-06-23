@@ -27,6 +27,11 @@ When `controller.enabled` is true, the fallback controller adjusts:
 - humidifier mode/level when plant sensors are too dry;
 - vent opening when plant sensors are too hot or too humid.
 
+The default `controller.strategy` is `proportional`, which keeps the original
+smooth behavior. The `on_off` strategy is relay automation: devices switch
+fully on when any plant sensor is outside the configured tolerance and switch
+off when all plant sensors are close enough to their targets.
+
 When `controller.ml_enabled` is true, a small in-process learning layer explores small changes around the fallback decision. Its reward favors plant comfort and health while penalizing device energy use. No external ML library is required.
 
 Plants also remove a small amount of humidity from their local cell each step. This makes humidity drift downward over time, so humidifiers visibly switch between active and idle states instead of staying irrelevant.

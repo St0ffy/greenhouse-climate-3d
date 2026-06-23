@@ -48,6 +48,46 @@ int main() {
     assert(satisfiedSummary.enabled);
     assert(devices.humidifiers.front().spec.mode == "off");
 
+    {
+        const std::vector<greenhouse::VentSpec> vents = {
+            {"vent", {1.5, 0.5, 0.5}, 0.0, 1.0}
+        };
+        greenhouse::MappedDeviceSet onOffDevices =
+            greenhouse::mapDeviceSetToGrid(plants, vents, heaters, humidifiers, grid);
+
+        greenhouse::ClimateControlSpec onOffSpec;
+        onOffSpec.enabled = true;
+        onOffSpec.strategy = "on_off";
+        onOffSpec.temperatureToleranceC = 0.5;
+        onOffSpec.humidityTolerancePercent = 3.0;
+        greenhouse::AdaptiveClimateController onOffController(onOffSpec);
+
+        const std::vector<greenhouse::PlantSensorReading> coldDrySensors = {
+            {"plant", {0, 0, 0}, {0, 0, 0}, 0, 20.0, 50.0, 250.0}
+        };
+        onOffController.apply(onOffDevices, onOffDevices.plants, coldDrySensors, states);
+        assert(onOffDevices.heaters[0].spec.powerW == 0.0);
+        assert(onOffDevices.heaters[1].spec.powerW == 1000.0);
+        assert(onOffDevices.humidifiers.front().spec.mode == "high");
+        assert(onOffDevices.vents.front().spec.opening == 0.0);
+
+        const std::vector<greenhouse::PlantSensorReading> targetSensors = {
+            {"plant", {0, 0, 0}, {0, 0, 0}, 0, 21.6, 58.0, 300.0}
+        };
+        onOffController.apply(onOffDevices, onOffDevices.plants, targetSensors, states);
+        assert(onOffDevices.heaters[1].spec.powerW == 0.0);
+        assert(onOffDevices.humidifiers.front().spec.mode == "off");
+        assert(onOffDevices.vents.front().spec.opening == 0.0);
+
+        const std::vector<greenhouse::PlantSensorReading> hotWetSensors = {
+            {"plant", {0, 0, 0}, {0, 0, 0}, 0, 24.0, 66.0, 300.0}
+        };
+        onOffController.apply(onOffDevices, onOffDevices.plants, hotWetSensors, states);
+        assert(onOffDevices.heaters[1].spec.powerW == 0.0);
+        assert(onOffDevices.humidifiers.front().spec.mode == "off");
+        assert(onOffDevices.vents.front().spec.opening == 1.0);
+    }
+
     greenhouse::PlantGrowthStats stats;
     stats.averageComfort = 0.8;
     stats.averageHealth = 1.0;

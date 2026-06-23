@@ -35,13 +35,13 @@ cmake --build build
 If CMake is not available but `g++` is available:
 
 ```bash
-g++ -std=c++17 -I include src/main.cpp src/Config.cpp src/Geometry.cpp src/Devices.cpp src/Weather.cpp src/Material.cpp src/Physics.cpp src/Simulator.cpp src/Exporter.cpp src/Report.cpp src/Optimizer.cpp -o greenhouse3d
+g++ -std=c++17 -I include src/main.cpp src/Config.cpp src/Comparison.cpp src/Geometry.cpp src/Devices.cpp src/Weather.cpp src/Material.cpp src/Physics.cpp src/Simulator.cpp src/Exporter.cpp src/Report.cpp src/Optimizer.cpp src/TerminalView.cpp src/Controller.cpp src/Plant.cpp -o greenhouse3d
 ```
 
 On Windows with `g++`:
 
 ```powershell
-g++ -std=c++17 -I include src/main.cpp src/Config.cpp src/Geometry.cpp src/Devices.cpp src/Weather.cpp src/Material.cpp src/Physics.cpp src/Simulator.cpp src/Exporter.cpp src/Report.cpp src/Optimizer.cpp -o greenhouse3d.exe
+g++ -std=c++17 -I include src/main.cpp src/Config.cpp src/Comparison.cpp src/Geometry.cpp src/Devices.cpp src/Weather.cpp src/Material.cpp src/Physics.cpp src/Simulator.cpp src/Exporter.cpp src/Report.cpp src/Optimizer.cpp src/TerminalView.cpp src/Controller.cpp src/Plant.cpp -o greenhouse3d.exe
 ```
 
 ## 3. Configure
@@ -128,7 +128,30 @@ If this mode is slow, lower:
 "max_layouts": 200
 ```
 
-## 6. Read Outputs
+## 6. Compare Control Strategies
+
+Linux/PuTTY:
+
+```bash
+./build/greenhouse3d compare examples/control_comparison/config.json
+```
+
+Windows PowerShell:
+
+```powershell
+.\greenhouse3d.exe compare examples\control_comparison\config.json
+```
+
+What happens:
+
+1. Program runs the same scenario with `controller.strategy=on_off`.
+2. Program runs the same scenario with ML enabled over the proportional controller.
+3. Terminal playback is disabled for both runs.
+4. ML policy memory is disabled so the comparison is repeatable.
+5. Results are exported to `on_off/` and `ml/` subdirectories.
+6. `comparison_report.txt` gives the final recommendation.
+
+## 7. Read Outputs
 
 Output files are written to:
 
@@ -182,4 +205,3 @@ The user can:
 - run heater placement optimization;
 - compare baseline and optimized heater layouts;
 - work locally on Windows and remotely through PuTTY using GitHub.
-

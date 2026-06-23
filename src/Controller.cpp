@@ -69,6 +69,40 @@ Demand fallbackDemand(
     return demand;
 }
 
+Demand onOffDemand(
+    const std::vector<MappedPlantPoint>& plants,
+    const std::vector<PlantSensorReading>& sensors,
+    double temperatureToleranceC,
+    double humidityTolerancePercent
+) {
+    Demand demand;
+    if (plants.empty() || sensors.empty()) {
+        return demand;
+    }
+
+    const double temperatureTolerance = std::max(0.0, temperatureToleranceC);
+    const double humidityTolerance = std::max(0.0, humidityTolerancePercent);
+    const std::size_t count = std::min(plants.size(), sensors.size());
+
+    for (std::size_t i = 0; i < count; ++i) {
+        const PlantPoint& plant = plants[i].plant;
+        const PlantSensorReading& sensor = sensors[i];
+
+        if (sensor.temperatureC < plant.targetTemperatureC - temperatureTolerance) {
+            demand.heater = 1.0;
+        }
+        if (sensor.humidityPercent < plant.targetHumidityPercent - humidityTolerance) {
+            demand.humidifier = 1.0;
+        }
+        if (sensor.temperatureC > plant.targetTemperatureC + temperatureTolerance
+            || sensor.humidityPercent > plant.targetHumidityPercent + humidityTolerance) {
+            demand.vent = 1.0;
+        }
+    }
+
+    return demand;
+}
+
 ActionOffsets actionOffsets(int index, double maxChange) {
     const double values[3] = {-maxChange, 0.0, maxChange};
     const int heaterIndex = index % 3;
@@ -129,6 +163,10 @@ int countActiveHumidifiers(const MappedDeviceSet& devices) {
         }
     }
     return count;
+}
+
+bool usesOnOffStrategy(const ClimateControlSpec& spec) {
+    return spec.strategy == "on_off";
 }
 
 std::string currentTimestamp() {
@@ -258,7 +296,15 @@ ControlStepSummary AdaptiveClimateController::apply(
         };
     }
 
-    const Demand demand = fallbackDemand(plants, sensors);
+    const Demand demand =
+        usesOnOffStrategy(spec_)
+            ? onOffDemand(
+                plants,
+                sensors,
+                spec_.temperatureToleranceC,
+                spec_.humidityTolerancePercent
+            )
+            : fallbackDemand(plants, sensors);
     lastActionIndex_ = chooseAction();
     const ActionOffsets offsets =
         spec_.mlEnabled

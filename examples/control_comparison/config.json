@@ -1,0 +1,148 @@
+{
+  "run": {
+    "mode": "compare",
+    "duration_seconds": 14400,
+    "time_step_seconds": 300
+  },
+  "greenhouse": {
+    "length_m": 12.0,
+    "width_m": 6.0,
+    "height_m": 3.0
+  },
+  "grid": {
+    "nx": 12,
+    "ny": 6,
+    "nz": 4
+  },
+  "initial_state": {
+    "temperature_c": 17.0,
+    "humidity_percent": 52.0
+  },
+  "weather": {
+    "outside_temperature_c": 4.0,
+    "outside_humidity_percent": 68.0,
+    "solar_radiation_w_m2": 220.0,
+    "weather_file": "data/weather_sample.csv"
+  },
+  "material": {
+    "name": "polycarbonate",
+    "heat_loss_coefficient": 0.36,
+    "solar_transmission": 0.74
+  },
+  "vents": [
+    {
+      "name": "left_roof_vent",
+      "position": [2.0, 0.4, 2.7],
+      "opening": 0.2,
+      "influence_radius_m": 2.2,
+      "enabled": true,
+      "failed": false,
+      "power_w": 20.0
+    },
+    {
+      "name": "right_roof_vent",
+      "position": [10.0, 5.6, 2.7],
+      "opening": 0.2,
+      "influence_radius_m": 2.2,
+      "enabled": true,
+      "failed": false,
+      "power_w": 20.0
+    }
+  ],
+  "heaters": [
+    {
+      "name": "west_floor_heater",
+      "position": [3.0, 2.0, 0.25],
+      "power_w": 800.0,
+      "max_power_w": 1600.0,
+      "influence_radius_m": 2.4,
+      "enabled": true,
+      "failed": false
+    },
+    {
+      "name": "east_floor_heater",
+      "position": [9.0, 4.0, 0.25],
+      "power_w": 800.0,
+      "max_power_w": 1600.0,
+      "influence_radius_m": 2.4,
+      "enabled": true,
+      "failed": false
+    }
+  ],
+  "humidity": {
+    "enabled": true,
+    "humidifier_mode": "medium"
+  },
+  "humidifiers": [
+    {
+      "name": "center_mist",
+      "position": [6.0, 3.0, 0.8],
+      "mode": "medium",
+      "influence_radius_m": 2.5,
+      "enabled": true,
+      "failed": false,
+      "level": 0.8,
+      "power_w": 150.0
+    }
+  ],
+  "plants": [
+    {
+      "name": "bed_west",
+      "position": [3.0, 2.0, 0.5],
+      "target_temperature_c": 22.0,
+      "target_humidity_percent": 62.0,
+      "target_light_w_m2": 300.0,
+      "sensor_height_m": 0.4
+    },
+    {
+      "name": "bed_center",
+      "position": [6.0, 3.0, 0.5],
+      "target_temperature_c": 22.0,
+      "target_humidity_percent": 62.0,
+      "target_light_w_m2": 300.0,
+      "sensor_height_m": 0.4
+    },
+    {
+      "name": "bed_east",
+      "position": [9.0, 4.0, 0.5],
+      "target_temperature_c": 22.0,
+      "target_humidity_percent": 62.0,
+      "target_light_w_m2": 300.0,
+      "sensor_height_m": 0.4
+    }
+  ],
+  "plant_physics": {
+    "humidity_uptake_percent_per_hour": 0.35,
+    "max_humidity_uptake_percent_per_step": 0.20
+  },
+  "controller": {
+    "enabled": true,
+    "strategy": "proportional",
+    "ml_enabled": false,
+    "ml_memory_enabled": false,
+    "temperature_tolerance_c": 0.5,
+    "humidity_tolerance_percent": 3.0,
+    "energy_weight": 0.08,
+    "learning_rate": 0.25,
+    "exploration_rate": 0.12,
+    "comfort_weight": 1.0,
+    "max_heater_level_change": 0.25
+  },
+  "optimizer": {
+    "enabled": false,
+    "candidate_step_m": 1.0,
+    "max_candidates": 24,
+    "max_layouts": 276,
+    "energy_weight": 0.04
+  },
+  "output": {
+    "directory": "outputs/examples/control_comparison",
+    "write_csv": true,
+    "write_json": true,
+    "write_report": true,
+    "terminal_view": {
+      "enabled": false,
+      "interactive": false
+    }
+  }
+}

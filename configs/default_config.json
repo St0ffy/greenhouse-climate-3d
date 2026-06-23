@@ -98,10 +98,13 @@
   },
   "controller": {
     "enabled": true,
+    "strategy": "proportional",
     "ml_enabled": true,
     "ml_memory_enabled": true,
     "ml_memory_path": "outputs/ml_policy.json",
     "ml_memory_save_every_steps": 50,
+    "temperature_tolerance_c": 0.5,
+    "humidity_tolerance_percent": 3.0,
     "energy_weight": 0.08,
     "learning_rate": 0.25,
     "exploration_rate": 0.12,

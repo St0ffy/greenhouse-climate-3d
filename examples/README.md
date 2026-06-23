@@ -1,6 +1,40 @@
 # Examples
 
+## Main examples for control work
+
+- `configs/default_config.json` is the main latest large weekly demo. It uses
+  plant sensors, live control, ML memory, and the learning-analysis workflow.
+- `examples/control_comparison/config.json` is the short comparison demo for
+  the third CLI mode:
+
+```bash
+./build/greenhouse3d compare examples/control_comparison/config.json
+```
+
+It writes `comparison_report.txt`, plus separate `on_off/` and `ml/` result
+folders, under `outputs/examples/control_comparison/`.
+
 Эта папка содержит готовые сценарии для запуска проекта.
+
+## control_comparison
+
+Короткий сценарий для сравнения простой датчиковой автоматики и ML:
+
+```bash
+./build/greenhouse3d compare examples/control_comparison/config.json
+```
+
+Windows PowerShell:
+
+```powershell
+.\build-mingw\greenhouse3d.exe compare examples\control_comparison\config.json
+```
+
+Результаты сохраняются в:
+
+```text
+outputs/examples/control_comparison/
+```
 
 ## spring_tomatoes
 

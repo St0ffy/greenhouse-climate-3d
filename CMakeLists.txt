@@ -11,6 +11,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(greenhouse_core
     src/Config.cpp
+    src/Comparison.cpp
     src/Geometry.cpp
     src/Weather.cpp
     src/Material.cpp
@@ -93,6 +94,14 @@ target_link_libraries(test_controller PRIVATE greenhouse_core)
 
 add_test(NAME controller COMMAND test_controller)
 
+add_executable(test_control_comparison
+    tests/test_control_comparison.cpp
+)
+
+target_link_libraries(test_control_comparison PRIVATE greenhouse_core)
+
+add_test(NAME control_comparison COMMAND test_control_comparison)
+
 add_executable(test_physics
     tests/test_physics.cpp
 )
@@ -133,6 +142,7 @@ set_tests_properties(
     devices
     plants
     controller
+    control_comparison
     physics
     simulator
     export_report

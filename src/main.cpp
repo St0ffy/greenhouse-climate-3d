@@ -1,4 +1,5 @@
 #include "Config.h"
+#include "Comparison.h"
 #include "Devices.h"
 #include "Exporter.h"
 #include "Geometry.h"
@@ -22,11 +23,12 @@ void printUsage() {
     std::cout
         << "Usage:\n"
         << "  greenhouse3d simulate <config_path>\n"
-        << "  greenhouse3d optimize <config_path>\n";
+        << "  greenhouse3d optimize <config_path>\n"
+        << "  greenhouse3d compare <config_path>\n";
 }
 
 bool isValidMode(const std::string& mode) {
-    return mode == "simulate" || mode == "optimize";
+    return mode == "simulate" || mode == "optimize" || mode == "compare";
 }
 
 void printGridSummary(const greenhouse::Grid3D& grid) {
@@ -165,7 +167,82 @@ int main(int argc, char* argv[]) {
         greenhouse::ExportedFiles exported;
         std::string reportText;
 
-        if (config.mode == "optimize") {
+        if (config.mode == "compare") {
+            std::cout << "\nRunning control strategy comparison...\n";
+            const greenhouse::ControlComparisonResult comparison =
+                greenhouse::runControlComparison(
+                    config,
+                    grid,
+                    weather,
+                    material,
+                    devices
+                );
+
+            const greenhouse::ExportedFiles onOffExported =
+                greenhouse::exportSimulationResult(
+                    comparison.onOff.result,
+                    grid,
+                    comparison.onOff.result.config.output
+                );
+            const greenhouse::ExportedFiles mlExported =
+                greenhouse::exportSimulationResult(
+                    comparison.ml.result,
+                    grid,
+                    comparison.ml.result.config.output
+                );
+
+            const greenhouse::MappedDeviceSet& onOffReportDevices =
+                comparison.onOff.result.frames.empty()
+                    ? devices
+                    : comparison.onOff.result.frames.back().devices;
+            const greenhouse::MappedDeviceSet& mlReportDevices =
+                comparison.ml.result.frames.empty()
+                    ? devices
+                    : comparison.ml.result.frames.back().devices;
+
+            const std::string onOffReportPath =
+                greenhouse::writeReportFile(
+                    greenhouse::buildSimulationReport(
+                        comparison.onOff.result,
+                        grid,
+                        onOffReportDevices
+                    ),
+                    comparison.onOff.result.config.output
+                );
+            const std::string mlReportPath =
+                greenhouse::writeReportFile(
+                    greenhouse::buildSimulationReport(
+                        comparison.ml.result,
+                        grid,
+                        mlReportDevices
+                    ),
+                    comparison.ml.result.config.output
+                );
+
+            reportText =
+                greenhouse::buildControlComparisonReport(comparison, grid);
+            const std::string comparisonReportPath =
+                greenhouse::writeComparisonReportFile(reportText, config.output);
+
+            std::cout << "\n" << reportText;
+            std::cout << "\nOutput files\n";
+            std::cout << "------------\n";
+            for (const std::string& path : onOffExported.paths) {
+                std::cout << path << "\n";
+            }
+            if (!onOffReportPath.empty()) {
+                std::cout << onOffReportPath << "\n";
+            }
+            for (const std::string& path : mlExported.paths) {
+                std::cout << path << "\n";
+            }
+            if (!mlReportPath.empty()) {
+                std::cout << mlReportPath << "\n";
+            }
+            if (!comparisonReportPath.empty()) {
+                std::cout << comparisonReportPath << "\n";
+            }
+        } else if (config.mode == "optimize") {
             std::cout << "\nRunning heater placement optimization...\n";
             const greenhouse::OptimizationResult optimization =
                 greenhouse::optimizeHeaterPlacement(
@@ -204,11 +281,16 @@ int main(int argc, char* argv[]) {
         }
 
         const std::string reportPath =
-            greenhouse::writeReportFile(reportText, config.output);
+            config.mode == "compare"
+                ? std::string{}
+                : greenhouse::writeReportFile(reportText, config.output);
 
-        std::cout << "\n" << reportText;
+        if (config.mode != "compare") {
+            std::cout << "\n" << reportText;
+        }
 
-        if (!exported.paths.empty() || !reportPath.empty()) {
+        if (config.mode != "compare"
+            && (!exported.paths.empty() || !reportPath.empty())) {
             std::cout << "\nOutput files\n";
             std::cout << "------------\n";
             for (const std::string& path : exported.paths) {

@@ -149,6 +149,7 @@ struct ClimateControlSpec {
     bool enabled = false;
     bool mlEnabled = false;
     bool mlMemoryEnabled = true;
+    std::string strategy = "proportional";
     std::string mlMemoryPath = "outputs/ml_policy.json";
     int mlMemorySaveEverySteps = 50;
     double energyWeight = 0.08;
@@ -156,6 +157,8 @@ struct ClimateControlSpec {
     double explorationRate = 0.10;
     double comfortWeight = 1.0;
     double maxHeaterLevelChange = 0.25;
+    double temperatureToleranceC = 0.5;
+    double humidityTolerancePercent = 3.0;
 };
 
 struct PlantSensorReading {

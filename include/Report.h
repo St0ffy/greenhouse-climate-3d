@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Devices.h"
+#include "Comparison.h"
 #include "Geometry.h"
 #include "Optimizer.h"
 #include "Simulator.h"
@@ -21,7 +22,17 @@ std::string buildOptimizationReport(
     const Grid3D& grid
 );
 
+std::string buildControlComparisonReport(
+    const ControlComparisonResult& result,
+    const Grid3D& grid
+);
+
 std::string writeReportFile(
+    const std::string& reportText,
+    const OutputSpec& output
+);
+
+std::string writeComparisonReportFile(
     const std::string& reportText,
     const OutputSpec& output
 );

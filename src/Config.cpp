@@ -317,13 +317,16 @@ SimulationConfig loadConfig(const std::string& path) {
         readBool(controlSection, "enabled", false),
         readBool(controlSection, "ml_enabled", false),
         readBool(controlSection, "ml_memory_enabled", true),
+        readString(controlSection, "strategy", "proportional"),
         readString(controlSection, "ml_memory_path", "outputs/ml_policy.json"),
         readInt(controlSection, "ml_memory_save_every_steps", 50),
         readNumber(controlSection, "energy_weight", 0.08),
         readNumber(controlSection, "learning_rate", 0.25),
         readNumber(controlSection, "exploration_rate", 0.10),
         readNumber(controlSection, "comfort_weight", 1.0),
-        readNumber(controlSection, "max_heater_level_change", 0.25)
+        readNumber(controlSection, "max_heater_level_change", 0.25),
+        readNumber(controlSection, "temperature_tolerance_c", 0.5),
+        readNumber(controlSection, "humidity_tolerance_percent", 3.0)
     };
     config.heaterPowerW = readNumber(text, "power_w", 1200.0);
     config.plants = {

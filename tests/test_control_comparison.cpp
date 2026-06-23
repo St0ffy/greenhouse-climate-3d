@@ -79,11 +79,11 @@ int main() {
 
     const std::string terminalSummary =
         greenhouse::buildControlComparisonTerminalSummary(comparison);
-    assert(terminalSummary.find("Control comparison summary") != std::string::npos);
     assert(terminalSummary.find("ON_OFF") != std::string::npos);
     assert(terminalSummary.find("ML") != std::string::npos);
     assert(terminalSummary.find("BEST") != std::string::npos);
-    assert(terminalSummary.find("Verdict") != std::string::npos);
+    assert(terminalSummary.find("Metric") != std::string::npos);
+    assert(terminalSummary.find("Verdict") == std::string::npos);
 
     return 0;
 }

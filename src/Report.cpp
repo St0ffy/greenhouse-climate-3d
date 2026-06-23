@@ -259,11 +259,6 @@ std::string buildControlComparisonTerminalSummary(
     const ControlComparisonSummary& onOff = result.onOff.summary;
     const ControlComparisonSummary& ml = result.ml.summary;
 
-    report << "Control comparison summary\n";
-    report << "==========================\n";
-    report << "Lower is better for errors, energy, and quality score.\n";
-    report << "Higher is better for comfort and health.\n\n";
-
     report << std::left << std::setw(31) << "Metric"
            << std::right << std::setw(17) << "ON_OFF"
            << std::setw(17) << "ML"
@@ -330,10 +325,6 @@ std::string buildControlComparisonTerminalSummary(
         result.mlQuality,
         false
     );
-
-    report << "\nVerdict\n";
-    report << "-------\n";
-    report << result.recommendation << "\n";
     return report.str();
 }
 

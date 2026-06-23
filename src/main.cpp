@@ -149,26 +149,27 @@ int main(int argc, char* argv[]) {
             );
 
         std::cout << std::fixed << std::setprecision(2);
-        std::cout << "Greenhouse Climate 3D\n";
-        std::cout << "Mode: " << config.mode << "\n";
-        std::cout << "Config: " << configPath << "\n";
-        std::cout << "Grid: "
-                  << config.gridSize.nx << " x "
-                  << config.gridSize.ny << " x "
-                  << config.gridSize.nz << "\n";
-        std::cout << "Duration, seconds: " << config.durationSeconds << "\n";
-        std::cout << "Time step, seconds: " << config.timeStepSeconds << "\n";
-        printGridSummary(grid);
-        printMaterialSummary(material);
-        printWeatherSummary(weather, config.durationSeconds);
-        printPlantMapping(devices.plants, grid);
-        printDeviceMapping(devices, grid);
+        if (config.mode != "compare") {
+            std::cout << "Greenhouse Climate 3D\n";
+            std::cout << "Mode: " << config.mode << "\n";
+            std::cout << "Config: " << configPath << "\n";
+            std::cout << "Grid: "
+                      << config.gridSize.nx << " x "
+                      << config.gridSize.ny << " x "
+                      << config.gridSize.nz << "\n";
+            std::cout << "Duration, seconds: " << config.durationSeconds << "\n";
+            std::cout << "Time step, seconds: " << config.timeStepSeconds << "\n";
+            printGridSummary(grid);
+            printMaterialSummary(material);
+            printWeatherSummary(weather, config.durationSeconds);
+            printPlantMapping(devices.plants, grid);
+            printDeviceMapping(devices, grid);
+        }
 
         greenhouse::ExportedFiles exported;
         std::string reportText;
 
         if (config.mode == "compare") {
-            std::cout << "\nRunning control strategy comparison...\n";
             const greenhouse::ControlComparisonResult comparison =
                 greenhouse::runControlComparison(
                     config,
@@ -223,26 +224,13 @@ int main(int argc, char* argv[]) {
                 greenhouse::buildControlComparisonReport(comparison, grid);
             const std::string comparisonReportPath =
                 greenhouse::writeComparisonReportFile(reportText, config.output);
+            (void)onOffExported;
+            (void)mlExported;
+            (void)onOffReportPath;
+            (void)mlReportPath;
+            (void)comparisonReportPath;
 
-            std::cout << "\n"
-                      << greenhouse::buildControlComparisonTerminalSummary(comparison);
-            std::cout << "\nOutput files\n";
-            std::cout << "------------\n";
-            for (const std::string& path : onOffExported.paths) {
-                std::cout << path << "\n";
-            }
-            if (!onOffReportPath.empty()) {
-                std::cout << onOffReportPath << "\n";
-            }
-            for (const std::string& path : mlExported.paths) {
-                std::cout << path << "\n";
-            }
-            if (!mlReportPath.empty()) {
-                std::cout << mlReportPath << "\n";
-            }
-            if (!comparisonReportPath.empty()) {
-                std::cout << comparisonReportPath << "\n";
-            }
+            std::cout << greenhouse::buildControlComparisonTerminalSummary(comparison);
         } else if (config.mode == "optimize") {
             std::cout << "\nRunning heater placement optimization...\n";
             const greenhouse::OptimizationResult optimization =

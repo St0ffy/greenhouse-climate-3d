@@ -51,9 +51,9 @@ The comparison report includes:
 - heater and total device energy;
 - a combined recommendation.
 
-The terminal also prints a short table immediately after the command finishes.
-Rows marked `BEST` show which mode is better for each metric, and the `Verdict`
-section gives the quick recommendation without opening any output file.
+The terminal prints only the short comparison table after the command finishes.
+Rows marked `BEST` show which mode is better for each metric. Open
+`comparison_report.txt` only when you need the full written explanation.
 
 ## Main Examples
 

@@ -2,6 +2,7 @@
 #include "Devices.h"
 #include "Geometry.h"
 #include "Material.h"
+#include "Report.h"
 #include "Weather.h"
 
 #include <cassert>
@@ -75,6 +76,14 @@ int main() {
     assert(!comparison.ml.result.frames.empty());
     assert(!comparison.recommendation.empty());
     assert(std::fabs(comparison.onOffQuality - comparison.mlQuality) > 1e-9);
+
+    const std::string terminalSummary =
+        greenhouse::buildControlComparisonTerminalSummary(comparison);
+    assert(terminalSummary.find("Control comparison summary") != std::string::npos);
+    assert(terminalSummary.find("ON_OFF") != std::string::npos);
+    assert(terminalSummary.find("ML") != std::string::npos);
+    assert(terminalSummary.find("BEST") != std::string::npos);
+    assert(terminalSummary.find("Verdict") != std::string::npos);
 
     return 0;
 }

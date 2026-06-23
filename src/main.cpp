@@ -224,7 +224,8 @@ int main(int argc, char* argv[]) {
             const std::string comparisonReportPath =
                 greenhouse::writeComparisonReportFile(reportText, config.output);
 
-            std::cout << "\n" << reportText;
+            std::cout << "\n"
+                      << greenhouse::buildControlComparisonTerminalSummary(comparison);
             std::cout << "\nOutput files\n";
             std::cout << "------------\n";
             for (const std::string& path : onOffExported.paths) {

@@ -27,6 +27,10 @@ std::string buildControlComparisonReport(
     const Grid3D& grid
 );
 
+std::string buildControlComparisonTerminalSummary(
+    const ControlComparisonResult& result
+);
+
 std::string writeReportFile(
     const std::string& reportText,
     const OutputSpec& output

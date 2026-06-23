@@ -26,6 +26,10 @@ std::string formatTargetTime(const ControlComparisonSummary& summary) {
     return output.str();
 }
 
+std::string bestLabel(bool best) {
+    return best ? "BEST" : "";
+}
+
 std::filesystem::path ensureOutputDirectory(const OutputSpec& output) {
     const std::filesystem::path directory =
         output.directory.empty()
@@ -71,6 +75,38 @@ void appendComparisonRun(
     report << "Total device energy, kWh: "
            << summary.totalDeviceEnergyKWh << "\n";
     report << "Comparison quality score: " << quality << "\n";
+}
+
+void appendTerminalMetricRow(
+    std::ostringstream& report,
+    const std::string& metric,
+    double onOffValue,
+    double mlValue,
+    bool higherIsBetter
+) {
+    const bool onOffBest =
+        higherIsBetter ? onOffValue >= mlValue : onOffValue <= mlValue;
+    const bool mlBest =
+        higherIsBetter ? mlValue >= onOffValue : mlValue <= onOffValue;
+
+    report << std::left << std::setw(31) << metric
+           << std::right << std::setw(10) << onOffValue
+           << "  " << std::left << std::setw(5) << bestLabel(onOffBest)
+           << std::right << std::setw(10) << mlValue
+           << "  " << std::left << std::setw(5) << bestLabel(mlBest)
+           << "\n";
+}
+
+void appendTerminalTextRow(
+    std::ostringstream& report,
+    const std::string& metric,
+    const std::string& onOffValue,
+    const std::string& mlValue
+) {
+    report << std::left << std::setw(31) << metric
+           << std::right << std::setw(17) << onOffValue
+           << std::setw(17) << mlValue
+           << "\n";
 }
 
 } // namespace
@@ -211,6 +247,93 @@ std::string buildControlComparisonReport(
     report << "--------------\n";
     report << result.recommendation << "\n";
 
+    return report.str();
+}
+
+std::string buildControlComparisonTerminalSummary(
+    const ControlComparisonResult& result
+) {
+    std::ostringstream report;
+    report << std::fixed << std::setprecision(2);
+
+    const ControlComparisonSummary& onOff = result.onOff.summary;
+    const ControlComparisonSummary& ml = result.ml.summary;
+
+    report << "Control comparison summary\n";
+    report << "==========================\n";
+    report << "Lower is better for errors, energy, and quality score.\n";
+    report << "Higher is better for comfort and health.\n\n";
+
+    report << std::left << std::setw(31) << "Metric"
+           << std::right << std::setw(17) << "ON_OFF"
+           << std::setw(17) << "ML"
+           << "\n";
+    report << std::string(65, '-') << "\n";
+    appendTerminalTextRow(
+        report,
+        "Target reached",
+        onOff.targetReached ? "yes" : "no",
+        ml.targetReached ? "yes" : "no"
+    );
+    appendTerminalTextRow(
+        report,
+        "Target time",
+        formatTargetTime(onOff),
+        formatTargetTime(ml)
+    );
+    appendTerminalMetricRow(
+        report,
+        "Avg temp error, C",
+        onOff.finalAverageTemperatureErrorC,
+        ml.finalAverageTemperatureErrorC,
+        false
+    );
+    appendTerminalMetricRow(
+        report,
+        "Max temp error, C",
+        onOff.finalMaxTemperatureErrorC,
+        ml.finalMaxTemperatureErrorC,
+        false
+    );
+    appendTerminalMetricRow(
+        report,
+        "Avg humidity error, %",
+        onOff.finalAverageHumidityErrorPercent,
+        ml.finalAverageHumidityErrorPercent,
+        false
+    );
+    appendTerminalMetricRow(
+        report,
+        "Plant comfort",
+        onOff.finalAverageComfort,
+        ml.finalAverageComfort,
+        true
+    );
+    appendTerminalMetricRow(
+        report,
+        "Plant health",
+        onOff.finalAverageHealth,
+        ml.finalAverageHealth,
+        true
+    );
+    appendTerminalMetricRow(
+        report,
+        "Total device energy, kWh",
+        onOff.totalDeviceEnergyKWh,
+        ml.totalDeviceEnergyKWh,
+        false
+    );
+    appendTerminalMetricRow(
+        report,
+        "Quality score",
+        result.onOffQuality,
+        result.mlQuality,
+        false
+    );
+
+    report << "\nVerdict\n";
+    report << "-------\n";
+    report << result.recommendation << "\n";
     return report.str();
 }
 
